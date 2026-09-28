@@ -1,0 +1,5 @@
+,peak_infected,peak_protection,hospital_rejected
+baseline,0.0,0.0,0.0
+no_info_saliency,3.0303030303030303,7.528161131513901,0.0
+no_behavior_feedback,-121.21212121212122,100.0,0.0
+no_hospital_constraint,0.0,0.0,0.0
