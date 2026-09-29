@@ -17,6 +17,8 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+import matplotlib
+matplotlib.use('Agg')  # 使用非GUI后端
 import numpy as np
 import pandas as pd
 from src.hybrid_model import HybridEpidemicModel, SEIRParams, DESParams

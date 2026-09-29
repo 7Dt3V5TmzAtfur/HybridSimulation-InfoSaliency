@@ -7,6 +7,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import matplotlib
+matplotlib.use('Agg')  # 使用非GUI后端
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -105,14 +107,16 @@ def run_info_effect_experiment():
     
     # 1. 峰值感染箱线图
     ax1 = axes[0, 0]
-    ax1.boxplot([peaks_exp, peaks_ctrl], labels=['With Feedback', 'Without Feedback'])
+    ax1.boxplot([peaks_exp, peaks_ctrl])
+    ax1.set_xticklabels(['With Feedback', 'Without Feedback'])
     ax1.set_ylabel('Peak Infected')
     ax1.set_title('Peak Infection Distribution')
     ax1.grid(True, alpha=0.3, axis='y')
     
     # 2. 总感染箱线图
     ax2 = axes[0, 1]
-    ax2.boxplot([totals_exp, totals_ctrl], labels=['With Feedback', 'Without Feedback'])
+    ax2.boxplot([totals_exp, totals_ctrl])
+    ax2.set_xticklabels(['With Feedback', 'Without Feedback'])
     ax2.set_ylabel('Total Infected')
     ax2.set_title('Final Epidemic Size Distribution')
     ax2.grid(True, alpha=0.3, axis='y')
@@ -169,7 +173,7 @@ def run_info_effect_experiment():
     os.makedirs('results', exist_ok=True)
     save_path = 'results/exp02_info_effect.png'
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"\n✅ 实验完成！图表已保存到: {save_path}")
+    print(f"\n[OK] 实验完成！图表已保存到: {save_path}")
     
     return {
         'peak_exp': peaks_exp,

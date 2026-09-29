@@ -7,6 +7,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import matplotlib
+matplotlib.use('Agg')  # 使用非GUI后端
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -125,7 +127,7 @@ def run_dengue_calibration_with_synthetic_data():
     os.makedirs('results', exist_ok=True)
     save_path = 'results/exp04_dengue_calibration.png'
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"\n✅ 实验完成！图表已保存到: {save_path}")
+    print(f"\n[OK] 实验完成！图表已保存到: {save_path}")
     
     # 输出校准结果
     print("\n" + "=" * 60)

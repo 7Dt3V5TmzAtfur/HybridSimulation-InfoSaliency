@@ -7,6 +7,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import matplotlib
+matplotlib.use('Agg')  # 使用非GUI后端
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -141,7 +143,7 @@ def run_parameter_sensitivity():
     os.makedirs('results', exist_ok=True)
     save_path = 'results/exp03_parameter_sensitivity.png'
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"\n✅ 实验完成！图表已保存到: {save_path}")
+    print(f"\n[OK] 实验完成！图表已保存到: {save_path}")
     
     # 生成综合对比图
     print("\n生成综合对比图...")
@@ -211,10 +213,10 @@ def run_threshold_analysis():
     
     if threshold_idx is not None:
         threshold_value = media_amplifications[threshold_idx]
-        print(f"\n✅ 达到20%效应量的临界媒体放大系数: {threshold_value:.3f}")
+        print(f"\n[OK] 达到20%效应量的临界媒体放大系数: {threshold_value:.3f}")
         print(f"   对应峰值降低: {peak_reductions[threshold_idx]:.1f}%")
     else:
-        print("\n❌ 在测试范围内未达到20%效应量")
+        print("\n[FAIL] 在测试范围内未达到20%效应量")
     
     # 可视化
     fig, ax = plt.subplots(figsize=(10, 6))

@@ -57,6 +57,7 @@ class SEIRParams:
     gamma: float = 0.1               # 恢复率倒数（1/10天）
     hospitalization_rate: float = 0.15  # 住院率
     detection_rate: float = 0.3      # 检测率
+    protection_efficiency: float = 0.85  # 防护效率（即使100%防护，仍有15%残余传播风险）
 ```
 
 **参数说明**：
@@ -65,6 +66,13 @@ class SEIRParams:
 - `gamma`：恢复率，1/γ为平均感染期（10天）
 - `hospitalization_rate`：感染者住院概率，登革热典型值10-20%
 - `detection_rate`：感染者被检测概率
+- `protection_efficiency`：**关键参数**，防护效率ε∈[0,1]。即使100%人群采取防护措施，仍有(1-ε)的残余传播风险。默认0.85表示85%防护效率，15%残余传播。反映了防护措施的不完美性（如口罩佩戴不规范、社交距离执行不严格等）。
+
+**有效传播率公式**：
+```
+β_eff(t) = β_base × (1 - ε × P_avg(t))
+```
+其中ε=protection_efficiency，P_avg(t)为全人群平均防护水平。
 
 ---
 
@@ -215,19 +223,103 @@ def process_daily(self, day: int) -> Tuple[int, int]:
 
 ---
 
-### 2.8 HybridEpidemicModel类
+### 2.8 MosquitoParams类（新增）
 
 **位置**：`src/hybrid_model.py`
 
-**功能**：主混合仿真模型，耦合ABM+SD+DES三层
+**功能**：蚊媒动态参数配置（登革热特有）
+
+**属性**：
+```python
+@dataclass
+class MosquitoParams:
+    mosquito_population: int = 5000  # 蚊子种群数量
+    biting_rate: float = 0.3  # 每日叮咬率
+    transmission_human_to_mosquito: float = 0.5  # 人传蚊概率
+    transmission_mosquito_to_human: float = 0.4  # 蚊传人概率
+    mosquito_lifespan: int = 14  # 蚊子平均寿命（天）
+    extrinsic_incubation_period: int = 10  # 外潜伏期（蚊子体内病毒发育时间）
+    seasonal_factor: float = 1.0  # 季节性因子（可根据月份调整）
+```
+
+**参数说明**：
+- `mosquito_population`：环境中蚊子总数，典型值1000-10000
+- `biting_rate`：每只蚊子每日叮咬概率，登革热蚊子典型值0.2-0.4
+- `transmission_human_to_mosquito`：叮咬感染者后蚊子感染的概率
+- `transmission_mosquito_to_human`：感染蚊子叮咬后人类感染的概率
+- `mosquito_lifespan`：蚊子平均寿命，伊蚊典型值10-14天
+- `extrinsic_incubation_period`：病毒在蚊子体内发育时间，登革热典型值8-12天
+- `seasonal_factor`：季节性因子，雨季可设为1.5-2.0，旱季设为0.5-0.8
+
+---
+
+### 2.9 MosquitoDynamicModel类（新增）
+
+**位置**：`src/hybrid_model.py`
+
+**功能**：蚊媒动态模型（登革热特有）
+
+**方法**：
+```python
+def update(self, infected_humans: int, day: int) -> float:
+    """
+    更新蚊媒动态
+    
+    Args:
+        infected_humans: 当前感染人数
+        day: 当前天数
+    
+    Returns:
+        蚊媒传播风险因子 [0, 1]
+    """
+```
+
+**蚊媒传播机制**：
+1. 感染人类 → 蚊子叮咬 → 蚊子感染
+2. 蚊子体内病毒发育（外潜伏期，10天）
+3. 感染蚊子 → 叮咬易感人群 → 人类感染
+
+**蚊媒传播风险计算**：
+```
+mosquito_risk(t) = b × p_mh × I_mosquito(t) / M × s
+```
+其中：
+- b：叮咬率（biting_rate）
+- p_mh：蚊传人概率（transmission_mosquito_to_human）
+- I_mosquito(t)：第t天感染蚊子数量
+- M：蚊子种群数量（mosquito_population）
+- s：季节性因子（seasonal_factor）
+
+**总感染概率**：
+```
+P_infection = min(1.0, human_transmission + mosquito_transmission)
+```
+其中：
+- human_transmission = β_eff(t) × I(t) / N（人传人）
+- mosquito_transmission = mosquito_risk(t)（蚊传人）
+
+**历史记录**：
+- `mosquito_risk`：每日蚊媒传播风险
+- `infected_mosquitoes`：每日感染蚊子数量
+- `exposed_mosquitoes`：每日潜伏期蚊子数量
+
+---
+
+### 2.10 HybridEpidemicModel类
+
+**位置**：`src/hybrid_model.py`
+
+**功能**：主混合仿真模型，耦合ABM+SD+DES+蚊媒动态四层
 
 **初始化**：
 ```python
 def __init__(self, population_size: int = 1000, 
              seir_params: SEIRParams = None,
              des_params: DESParams = None,
+             mosquito_params: MosquitoParams = None,
              media_amplification: float = 1.0,
-             enable_info_behavior_feedback: bool = True):
+             enable_info_behavior_feedback: bool = True,
+             enable_mosquito_transmission: bool = True):
     """
     初始化混合仿真模型
     
@@ -235,8 +327,10 @@ def __init__(self, population_size: int = 1000,
         population_size: 人口规模
         seir_params: SEIR参数
         des_params: DES参数
+        mosquito_params: 蚊媒参数（登革热特有）
         media_amplification: 媒体放大系数
         enable_info_behavior_feedback: 是否启用信息-行为反馈
+        enable_mosquito_transmission: 是否启用蚊媒传播（登革热特有）
     """
 ```
 
@@ -264,7 +358,9 @@ def get_results(self) -> pd.DataFrame:
 - `hospital_beds`：占用医院床位数
 - `hospital_icu`：占用ICU床位数
 - `rejected`：累计被拒绝入院次数
-- `effective_beta`：有效传播率
+- `effective_beta`：有效传播率（含防护效率参数ε）
+- `mosquito_risk`：蚊媒传播风险（登革热特有）
+- `infected_mosquitoes`：感染蚊子数量（登革热特有）
 
 ---
 

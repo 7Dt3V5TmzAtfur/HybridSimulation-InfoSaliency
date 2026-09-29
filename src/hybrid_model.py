@@ -37,6 +37,7 @@ class SEIRParams:
     gamma: float = 0.1  # 恢复率倒数（1/10天）
     hospitalization_rate: float = 0.15  # 住院率
     detection_rate: float = 0.3  # 检测率
+    protection_efficiency: float = 0.85  # 防护效率（即使100%防护，仍有15%残余传播风险）
 
 
 @dataclass
@@ -48,6 +49,77 @@ class DESParams:
     avg_hospital_stay: int = 7  # 平均住院天数
     avg_icu_stay: int = 14  # 平均ICU天数
     test_result_time: int = 1  # 检测结果时间（天）
+
+
+@dataclass
+class MosquitoParams:
+    """蚊媒动态参数（登革热通过蚊子传播）"""
+    mosquito_population: int = 5000  # 蚊子种群数量
+    biting_rate: float = 0.3  # 每日叮咬率
+    transmission_human_to_mosquito: float = 0.5  # 人传蚊概率
+    transmission_mosquito_to_human: float = 0.4  # 蚊传人概率
+    mosquito_lifespan: int = 14  # 蚊子平均寿命（天）
+    extrinsic_incubation_period: int = 10  # 外潜伏期（蚊子体内病毒发育时间）
+    seasonal_factor: float = 1.0  # 季节性因子（可根据月份调整）
+
+
+class MosquitoDynamicModel:
+    """蚊媒动态模型（登革热特有）"""
+    
+    def __init__(self, params: MosquitoParams):
+        self.params = params
+        self.infected_mosquitoes = 0  # 感染蚊子数量
+        self.exposed_mosquitoes = 0  # 潜伏期蚊子数量
+        self.mosquito_history: List[Dict] = []
+    
+    def update(self, infected_humans: int, day: int) -> float:
+        """
+        更新蚊媒动态
+        
+        Args:
+            infected_humans: 当前感染人数
+            day: 当前天数
+        
+        Returns:
+            蚊媒传播风险因子 [0, 1]
+        """
+        # 蚊子叮咬感染人类后，病毒在蚊子体内发育（外潜伏期）
+        new_exposed = (
+            self.params.biting_rate * 
+            self.params.transmission_human_to_mosquito * 
+            infected_humans * 
+            (self.params.mosquito_population - self.infected_mosquitoes - self.exposed_mosquitoes) / 
+            self.params.mosquito_population
+        )
+        
+        # 外潜伏期结束后，蚊子变为感染状态
+        new_infected = self.exposed_mosquitoes / self.params.extrinsic_incubation_period
+        
+        # 蚊子死亡
+        mosquito_death = self.infected_mosquitoes / self.params.mosquito_lifespan
+        
+        # 更新状态
+        self.exposed_mosquitoes = max(0, self.exposed_mosquitoes + new_exposed - new_infected)
+        self.infected_mosquitoes = max(0, self.infected_mosquitoes + new_infected - mosquito_death)
+        
+        # 计算蚊媒传播风险因子
+        mosquito_risk = (
+            self.params.biting_rate * 
+            self.params.transmission_mosquito_to_human * 
+            self.infected_mosquitoes / 
+            self.params.mosquito_population *
+            self.params.seasonal_factor
+        )
+        
+        # 记录历史
+        self.mosquito_history.append({
+            'day': day,
+            'infected_mosquitoes': self.infected_mosquitoes,
+            'exposed_mosquitoes': self.exposed_mosquitoes,
+            'mosquito_risk': mosquito_risk
+        })
+        
+        return min(1.0, mosquito_risk)
 
 
 class InformationSaliencyModel:
@@ -259,8 +331,10 @@ class HybridEpidemicModel:
     def __init__(self, population_size: int = 1000, 
                  seir_params: SEIRParams = None,
                  des_params: DESParams = None,
+                 mosquito_params: MosquitoParams = None,
                  media_amplification: float = 1.0,
-                 enable_info_behavior_feedback: bool = True):
+                 enable_info_behavior_feedback: bool = True,
+                 enable_mosquito_transmission: bool = True):
         """
         初始化混合仿真模型
         
@@ -268,13 +342,16 @@ class HybridEpidemicModel:
             population_size: 人口规模
             seir_params: SEIR参数
             des_params: DES参数
+            mosquito_params: 蚊媒参数
             media_amplification: 媒体放大系数
             enable_info_behavior_feedback: 是否启用信息-行为反馈
+            enable_mosquito_transmission: 是否启用蚊媒传播（登革热特有）
         """
         self.population_size = population_size
         self.seir_params = seir_params or SEIRParams()
         self.des_params = des_params or DESParams()
         self.enable_info_behavior_feedback = enable_info_behavior_feedback
+        self.enable_mosquito_transmission = enable_mosquito_transmission
         
         # 初始化Agent
         self.agents: List[Agent] = []
@@ -287,6 +364,12 @@ class HybridEpidemicModel:
         self.behavior_model = BehaviorModel()
         self.hospital = HospitalDES(self.des_params)
         
+        # 初始化蚊媒动态模型（登革热特有）
+        if enable_mosquito_transmission:
+            self.mosquito_model = MosquitoDynamicModel(mosquito_params or MosquitoParams())
+        else:
+            self.mosquito_model = None
+        
         # 历史记录
         self.history: Dict[str, List] = {
             'day': [],
@@ -297,7 +380,9 @@ class HybridEpidemicModel:
             'hospital_beds': [],
             'hospital_icu': [],
             'rejected': [],
-            'effective_beta': []
+            'effective_beta': [],
+            'mosquito_risk': [],
+            'infected_mosquitoes': []
         }
     
     def seed_infection(self, num_initial: int = 5):
@@ -329,6 +414,13 @@ class HybridEpidemicModel:
         # 计算社会影响（周围人感染比例）
         social_influence = counts['I'] / self.population_size
         
+        # 更新蚊媒动态（登革热特有）
+        mosquito_risk = 0.0
+        infected_mosquitoes = 0
+        if self.enable_mosquito_transmission and self.mosquito_model:
+            mosquito_risk = self.mosquito_model.update(counts['I'], day)
+            infected_mosquitoes = self.mosquito_model.infected_mosquitoes
+        
         # 第一遍：更新所有Agent的风险感知和防护行为
         for agent in self.agents:
             # 个人经历
@@ -345,14 +437,20 @@ class HybridEpidemicModel:
         # 计算全人群平均防护水平（用于感染概率）
         total_protection = sum(agent.protection_level for agent in self.agents)
         avg_protection = total_protection / self.population_size
-        effective_beta = self.seir_params.beta_base * (1 - avg_protection)
+        # 修正：添加防护效率参数ε
+        # 即使100%防护，仍有15%的残余传播风险
+        effective_beta = self.seir_params.beta_base * (1 - self.seir_params.protection_efficiency * avg_protection)
         
         # 第二遍：状态转移（使用一致的平均防护水平）
         for agent in self.agents:
             # 状态转移
             if agent.state == 'S':
-                # 感染概率（受防护行为影响）
-                if np.random.random() < effective_beta * counts['I'] / self.population_size:
+                # 感染概率（受人-人传播和蚊媒传播影响）
+                human_transmission_prob = effective_beta * counts['I'] / self.population_size
+                mosquito_transmission_prob = mosquito_risk if self.enable_mosquito_transmission else 0.0
+                total_infection_prob = min(1.0, human_transmission_prob + mosquito_transmission_prob)
+                
+                if np.random.random() < total_infection_prob:
                     agent.state = 'E'
                     agent.exposed_day = day
             
@@ -399,6 +497,8 @@ class HybridEpidemicModel:
         self.history['hospital_icu'].append(self.hospital.occupied_icu)
         self.history['rejected'].append(self.hospital.rejected_count)
         self.history['effective_beta'].append(effective_beta)
+        self.history['mosquito_risk'].append(mosquito_risk)
+        self.history['infected_mosquitoes'].append(infected_mosquitoes)
     
     def run(self, num_days: int = 200):
         """

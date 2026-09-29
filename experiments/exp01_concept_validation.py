@@ -7,6 +7,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import matplotlib
+matplotlib.use('Agg')  # 使用非GUI后端
 import numpy as np
 import matplotlib.pyplot as plt
 from src.hybrid_model import HybridEpidemicModel, SEIRParams, DESParams
@@ -82,7 +84,7 @@ def run_concept_validation():
     save_path = 'results/exp01_concept_validation.png'
     viz.plot_epidemic_curves(save_path=save_path, show_info_effect=True)
     
-    print(f"\n✅ 实验完成！图表已保存到: {save_path}")
+    print(f"\n[OK] 实验完成！图表已保存到: {save_path}")
     
     return results, stats
 
@@ -151,7 +153,7 @@ def run_comparison_experiment():
         save_path=save_path
     )
     
-    print(f"\n✅ 对比实验完成！图表已保存到: {save_path}")
+    print(f"\n[OK] 对比实验完成！图表已保存到: {save_path}")
     
     return results_exp, results_ctrl
 
