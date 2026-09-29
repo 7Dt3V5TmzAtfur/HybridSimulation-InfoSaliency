@@ -25,11 +25,11 @@ def run_dengue_calibration_with_synthetic_data():
     print("实验4：登革热数据校准（合成数据演示）")
     print("=" * 60)
     
-    # 生成合成登革热数据
+    # 生成合成登革热数据（减少人口规模以加速校准）
     print("\n[1/4] 生成合成登革热数据...")
     real_data = create_synthetic_dengue_data(
-        num_days=365 * 2,  # 2年
-        population=1000000,
+        num_days=365,  # 1年（减少天数）
+        population=5000,  # 减少人口规模
         peak_month=3,
         seasonality=0.8
     )
@@ -46,7 +46,7 @@ def run_dengue_calibration_with_synthetic_data():
     
     # 创建校准器
     print("\n[2/4] 创建模型校准器...")
-    population = 1000000
+    population = 5000
     calibrator = ModelCalibrator(real_data, population=population)
     
     # 校准参数
@@ -97,7 +97,7 @@ def run_dengue_calibration_with_synthetic_data():
     ax1.grid(True, alpha=0.3)
     
     # 标注拟合指标
-    ax1.text(0.02, 0.95, f'RMSE: {min_error:.1f}\nR² (train): {validation_results["train_r2"]:.3f}\nR² (test): {validation_results["test_r2"]:.3f}',
+    ax1.text(0.02, 0.95, f'RMSE: {min_error:.1f}\nR2 (train): {validation_results["train_r2"]:.3f}\nR2 (test): {validation_results["test_r2"]:.3f}',
             transform=ax1.transAxes, fontsize=11, verticalalignment='top',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
@@ -140,8 +140,8 @@ def run_dengue_calibration_with_synthetic_data():
     print(f"  media_amplification (媒体放大): {optimal_params[3]:.4f}")
     print(f"\n拟合指标:")
     print(f"  RMSE: {min_error:.2f}")
-    print(f"  训练集 R²: {validation_results['train_r2']:.3f}")
-    print(f"  测试集 R²: {validation_results['test_r2']:.3f}")
+    print(f"  训练集 R2: {validation_results['train_r2']:.3f}")
+    print(f"  测试集 R2: {validation_results['test_r2']:.3f}")
     print(f"\n基本再生数 R0: {R0:.2f}")
     
     return {

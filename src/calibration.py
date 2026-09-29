@@ -164,7 +164,7 @@ class ModelCalibrator:
         test_simulated = full_results['I'].values[split_idx:]
         test_rmse = np.sqrt(np.mean((test_simulated - test_real) ** 2))
         
-        # 计算R²
+        # 计算R2
         train_ss_res = np.sum((train_real - train_simulated) ** 2)
         train_ss_tot = np.sum((train_real - np.mean(train_real)) ** 2)
         train_r2 = 1 - (train_ss_res / train_ss_tot) if train_ss_tot > 0 else 0
@@ -183,8 +183,8 @@ class ModelCalibrator:
         }
         
         print("\n验证结果:")
-        print(f"训练集 RMSE: {train_rmse:.2f}, R²: {train_r2:.3f}")
-        print(f"测试集 RMSE: {test_rmse:.2f}, R²: {test_r2:.3f}")
+        print(f"训练集 RMSE: {train_rmse:.2f}, R2: {train_r2:.3f}")
+        print(f"测试集 RMSE: {test_rmse:.2f}, R2: {test_r2:.3f}")
         
         return validation_results
 
