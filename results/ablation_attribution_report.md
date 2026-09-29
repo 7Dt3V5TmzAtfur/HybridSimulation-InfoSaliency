@@ -28,12 +28,10 @@
 
 | 实验配置 | 峰值感染 | 峰值防护 | 医疗拒绝 |
 |---------|---------|---------|---------|
-|peak_infected|peak_protection|hospital_rejected
-|baseline|0.0|0.0|0.0
-|no_info_saliency|-5.0|7.275212597119274|-1138.2978723404256
-|no_behavior_feedback|-130.0|100.0|-2178.723404255319
-|no_hospital_constraint|1.0|0.31197475587133644|100.0
-|
+| baseline | 0.0 | 0.0 | 0.0 |
+| no_info_saliency | -5.0 | 7.3 | -1138.3 |
+| no_behavior_feedback | -130.0 | 100.0 | -2178.7 |
+| no_hospital_constraint | 1.0 | 0.3 | 100.0 |
 
 ## 关键发现
 

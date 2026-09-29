@@ -286,7 +286,9 @@ def main():
     report_lines.append("")
     report_lines.append("| 实验配置 | 峰值感染 | 峰值防护 | 医疗拒绝 |")
     report_lines.append("|---------|---------|---------|---------|")
-    report_lines.append(attribution_df.to_csv(sep='|', index=True).replace('\n', '\n|'))
+    for config_name in attribution_df.index:
+        row = attribution_df.loc[config_name]
+        report_lines.append(f"| {config_name} | {row['peak_infected']:.1f} | {row['peak_protection']:.1f} | {row['hospital_rejected']:.1f} |")
     report_lines.append("")
     report_lines.append("## 关键发现")
     report_lines.append("")
