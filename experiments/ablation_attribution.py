@@ -282,7 +282,7 @@ def main():
     report_lines.append("")
     report_lines.append("## 归因分析（贡献度百分比）")
     report_lines.append("")
-    report_lines.append("正值表示该组件对指标有正向贡献（移除后指标下降），负值表示负向贡献（移除后指标上升）。")
+    report_lines.append("解读说明：负值表示移除该组件后指标上升（该组件有效降低了指标），正值表示移除该组件后指标下降（该组件有效提升了指标）。")
     report_lines.append("")
     report_lines.append("| 实验配置 | 峰值感染 | 峰值防护 | 医疗拒绝 |")
     report_lines.append("|---------|---------|---------|---------|")
