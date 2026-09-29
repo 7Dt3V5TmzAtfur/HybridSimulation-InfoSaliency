@@ -47,8 +47,8 @@ def run_ablation_experiment(ablation_config: dict, population_size: int = 1000,
     )
     
     des_params = DESParams(
-        hospital_beds=200,
-        icu_beds=50,
+        hospital_beds=50,  # 减少床位，使资源约束生效
+        icu_beds=10,       # 减少ICU床位
         testing_capacity=100,
         avg_hospital_stay=7,
         avg_icu_stay=14,
