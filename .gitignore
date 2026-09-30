@@ -36,10 +36,6 @@ env/
 .DS_Store
 Thumbs.db
 
-# Large data files (download separately)
-data/*.zip
-data/*.csv
-
 # Temporary files
 *.tmp
 *.log
