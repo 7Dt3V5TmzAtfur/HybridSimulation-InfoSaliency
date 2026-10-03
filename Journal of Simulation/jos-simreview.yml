@@ -1,0 +1,18 @@
+# Journal of Simulation — simulate-reviewers venue profile
+# Facts from the offline Instructions for Authors (2026-09-14, user-provided)
+# + live scope check (2026-10-03). Scale anchors are the generic journal
+# family's historical norms (inferred-from-family), not JOS-published numbers.
+id: jos
+name: Journal of Simulation (Taylor & Francis)
+family: ieee-journal
+cfp_url: https://www.tandfonline.com/action/authorSubmission?show=instructions&journalCode=tjsm20
+review:
+  blind: double
+  system: Taylor & Francis Submission Portal
+  reviewers: 2  # IFA: "double anonymous peer reviewed by two independent, anonymous experts"
+  rebuttal_format: revision with point-by-point response letter
+notes: >
+  Simulation/OR community (OR Society journal). English only; main text
+  <=10,000 words incl. tables/figures; abstract <=200 words; 3-6 keywords.
+  Scope: simulation methodology and practice across OR; hybrid simulation
+  (ABM/DES/SD) squarely in scope; healthcare applications common.

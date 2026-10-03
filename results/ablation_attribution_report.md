@@ -14,6 +14,7 @@
 - **no_behavior_feedback**: 禁用信息-行为反馈（防护=0）
 - **no_hospital_constraint**: 移除医疗资源约束（床位/ICU≈无限）
 - **no_mosquito**: 禁用蚊媒传播通道
+- **no_human_transmission**: 禁用人-人传播通道（仅蚊媒）
 
 ## 各条件结果（均值±标准差）
 
@@ -24,6 +25,7 @@
 | no_behavior_feedback | 220.6±17.9 | 54±3 | 967.4±7.3 | 0.000 | 432.0±33.7 |
 | no_hospital_constraint | 149.7±14.0 | 68±5 | 887.3±17.9 | 0.371 | 0.0±0.0 |
 | no_mosquito | 141.6±18.6 | 69±7 | 839.4±32.4 | 0.369 | 147.5±61.5 |
+| no_human_transmission | 10.0±0.0 | 0±0 | 14.2±3.0 | 0.324 | 0.0±0.0 |
 
 ## 归因（变化%）
 
@@ -37,6 +39,7 @@
 | no_behavior_feedback | 47.4 | 9.0 | -100.0 | 113.1 |
 | no_hospital_constraint | 0.0 | 0.0 | 0.0 | -100.0 |
 | no_mosquito | -5.4 | -5.4 | -0.7 | -27.2 |
+| no_human_transmission | -93.3 | -98.4 | -12.8 | -100.0 |
 
 ## 注意事项
 

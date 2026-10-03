@@ -32,7 +32,7 @@ MANUSCRIPT = os.path.join(REPO, 'Journal of Simulation', 'submission', 'manuscri
 MANIFEST = os.path.join(REPO, 'results', 'RUN_MANIFEST.yml')
 
 EXPECTED_EXPERIMENTS = ['exp01', 'exp02', 'exp03', 'exp04', 'exp05', 'exp06',
-                        'exp07', 'exp08', 'ablation']
+                        'exp07', 'exp08', 'exp09', 'exp10', 'ablation']
 
 failures = []
 warnings = []
@@ -124,6 +124,20 @@ def main():
           and abs(e8.loc['ours_dynamic', 'peak_reduction_pct'] - 33.2) < 0.05
           and abs(e8.loc['awareness_dynamic', 'marginal_pp'] - 22.5) < 0.05
           and in_docs('+22.5'))
+
+    e9 = pd.read_csv(os.path.join(REPO, 'results/exp09_response_shape.csv'))
+    check('exp09 边际范围 1.3-5.9pp 全不显著',
+          abs(e9.dynamic_margin_pp.min() - 1.3) < 0.05
+          and abs(e9.dynamic_margin_pp.max() - 5.9) < 0.05
+          and (e9.p_value > 0.05).all() and in_docs('5.9') and in_docs('1.3'))
+
+    e10 = pd.read_csv(os.path.join(REPO, 'results/exp10_awareness_sensitivity.csv'))
+    check('exp10 8/9 正、7/9 显著，边际 +18.7~+48.2pp',
+          int((e10.dynamic_margin_pp > 0).sum()) == 8
+          and int((e10.p_value < 0.05).sum()) == 7
+          and abs(e10.dynamic_margin_pp.min() + 0.8) < 0.05
+          and abs(e10.dynamic_margin_pp.max() - 48.2) < 0.05
+          and in_docs('48.2') and in_docs('18.7') and in_docs('93.3'))
 
     e1 = pd.read_csv(os.path.join(REPO, 'results/exp01_summary.csv'), index_col=0)
     delay = e1.loc['with_feedback', 'peak_day_mean'] - e1.loc['without_feedback', 'peak_day_mean']

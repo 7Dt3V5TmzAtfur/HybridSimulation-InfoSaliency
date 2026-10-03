@@ -40,7 +40,7 @@ Kar, E.; Fakhimi, M.; Turner, C.; Eldabi, T. Hybrid simulation in healthcare: a
 Borshchev, A.; Filippov, A. From system dynamics and discrete event to
   practical agent based modeling: reasons, techniques, tools, In
   \emph{Proceedings of the 22nd International Conference of the System Dynamics
-  Society}, 2004.
+  Society, Oxford, England}; System Dynamics Society, 2004.
 
 \bibitem{morgan2017toolkit}
 Morgan, J.S.; Howick, S.; Belton, V. A toolkit of designs for mixing discrete
@@ -75,6 +75,16 @@ Sterman, J. \emph{Business Dynamics: Systems Thinking and Modeling for a
 \bibitem{barlas1996formal}
 Barlas, Y. Formal aspects of model validity and validation in system dynamics,
   \emph{System Dynamics Review}  \textbf{1996}, \emph{12}~(3), 183--210.
+
+\bibitem{verelst2016behavioural}
+Verelst, F.; Willem, L.; Beutels, P. Behavioural change models for infectious
+  disease transmission: a systematic review (2010--2015), \emph{Journal of The
+  Royal Society Interface}  \textbf{2016}, \emph{13}~(125), 20160820.
+
+\bibitem{bedson2021review}
+Bedson, J.; Skrip, L.A.; Pedi, D.; Abramowitz, S.; et~al. A review and agenda
+  for integrated disease models including social and behavioural factors,
+  \emph{Nature Human Behaviour}  \textbf{2021}, \emph{5}, 834--846.
 
 \bibitem{centola2010spread}
 Centola, D. The spread of behavior in an online social network experiment,

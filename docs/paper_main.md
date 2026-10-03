@@ -5,7 +5,7 @@
 本研究构建了**信息显著性驱动的登革热混合仿真框架**，将"显著性"概念从视觉领域扩展到信息领域，实现信息-行为-疫情耦合的传染病混合仿真，采用 **ABM + SD + DES + 蚊媒动态四层架构**。通过配对种子、多次重复的受控实验，本框架给出三个层面的结果：
 
 1. **内生防护行为显著压平曲线**：启用信息-行为反馈后，峰值感染相对"零防护"对照降低 **35.9%**（142.6±11.4 vs 222.4±14.3，Welch t=-19.49，p=8.5×10⁻²¹），总感染降低 **7.1%**（p=2.1×10⁻¹⁵）；该效应在行为参数扫描下保持稳健（κ≤1.0 时峰值降低 40%–48%，κ 增大后随响应饱和递减）。**该效应对种群规模敏感**：N=10⁴ 时峰值降低为 24.8%（大种群随机衰减消失，§4.5.4）。
-2. **效应分解揭示承重变量**：恒定防护对照（P\*≈0.336）可复现整体峰值下降的约 95%；信息显著性的**动态**调制的边际贡献为 3.2 个百分点且不显著（p=0.282；N=10⁴ 下为 4.5 个百分点、转为显著，恒定防护仍复现 85%）。**机制对照**（同一传播骨架换用 prevalence 驱动的 awareness 扩散行为模块、匹配平均防护）显示动态边际可达 +22.5 个百分点（p<0.001）——本机制动态效应小的根源是 S 型响应饱和，而非"动态调制不重要"的普遍结论。
+2. **效应分解揭示承重变量**：恒定防护对照（P\*≈0.336）可复现整体峰值下降的约 95%；信息显著性的**动态**调制的边际贡献为 3.2 个百分点且不显著（p=0.282；N=10⁴ 下为 4.5 个百分点、转为显著，恒定防护仍复现 85%）。**机制对照**（同一传播骨架换用 prevalence 驱动的 awareness 扩散行为模块、匹配保护水平）显示动态边际可达 +22.5 个百分点（p<0.001）——本机制动态效应小的根源是 S 型响应饱和，而非"动态调制不重要"的普遍结论。**稳健性**：awareness 结论在 (p_A, d_A) 3×3 网格中 8/9 配置为正、7/9 显著（+18.7 至 +48.2 个百分点）；响应形状扫描（中点 0.3–0.7 × 斜率 1.5/3.0）证实显著性通道的边际在所有形状下均为 1.3–5.9 个百分点且不显著——窄动态范围是显著性映射本身的属性。
 3. **真实数据校准成功**：在确定性等效系统上以网格搜索拟合 OpenDengue 巴西 2019 年周报数据（52 周，225 万报告病例），得 R²=**0.941**（β=0.25，γ=0.1，人类通道 R₀=2.50，有效报告率 ρ=1.14%）；替代系统与个体仿真周发病率相关 r=0.967。**时间外推**：冻结动力学参数至 2016–2023 各季（剔除缺测 2020），三个大疫情季 R²=0.79–0.94，小疫情年外推失败（§4.4.4）——校准可转移性以此为界。
 
 媒体放大系数的作用有限：在更细网格的阈值分析中，达到预设的"峰值降低≥20%"标准需要 α≥5（参照 α=0.5 的 10 倍）。消融实验（5 条件 × 10 配对重复）证实：行为反馈是承重组件（移除后峰值 +47.4%），信息显著性的单通道边际贡献在噪声范围内（−3.2%），医疗资源约束不影响传播动力学、仅作用于"延后入院"资源压力指标（−100%），蚊媒通道贡献峰值约 5.4%。
@@ -224,7 +224,9 @@ SD 使用微分方程建模宏观动力学。
 
 - **Funk et al. (2009)**：信息（awareness）传播与疫情爆发的耦合动力学（PNAS）
 - **Funk, Salathé & Jansen (2010)**：人类行为对传染病传播影响的系统综述
+- **Verelst, Willem & Beutels (2016)**：2010–2015 行为改变模型的系统综述
 - **Perra et al. (2012)**：活动驱动的时变网络上行为-传播自适应耦合
+- **Bedson et al. (2021)**：纳入社会与行为因素的整合疾病模型议程（Nature Human Behaviour）
 
 **关键发现**：
 
@@ -530,7 +532,7 @@ P(t) = 1 / (1 + exp(-κ × (R(t) - 0.5)))
 
 **目标**：量化各组件对系统行为的贡献。
 
-**设计**：5 条件 × 10 次**配对种子**重复（所有条件使用相同种子集）：baseline / no_info_saliency（α=0）/ no_behavior_feedback（防护=0）/ no_hospital_constraint（床位/ICU≈无限）/ no_mosquito（关闭蚊媒通道）。床位 50、ICU 10（收紧使约束实际生效；默认 200 床下约束几乎不触发）。α=1.0（与主实验统一；α 维度由实验 3 覆盖）。
+**设计**：6 条件 × 10 次**配对种子**重复（所有条件使用相同种子集）：baseline / no_info_saliency（α=0）/ no_behavior_feedback（防护=0）/ no_hospital_constraint（床位/ICU≈无限）/ no_mosquito（关闭蚊媒通道）/ no_human_transmission（关闭人-人通道，仅蚊媒）。床位 50、ICU 10（收紧使约束实际生效；默认 200 床下约束几乎不触发）。α=1.0（与主实验统一；α 维度由实验 3 覆盖）。
 
 **归因口径（全文唯一）**：变化% = (消融均值 − 基线均值) / 基线均值 × 100，**正值 = 移除该组件后指标上升**。报告均值±标准差；配对种子下不同条件消耗随机数序列不同，个体层面差异含随机成分，不以单次运行差异归因。
 
@@ -578,6 +580,7 @@ P(t) = 1 / (1 + exp(-κ × (R(t) - 0.5)))
 - **运行清单**：`results/RUN_MANIFEST.yml` 记录每次重跑的代码版本（git commit）、种子、协议参数、依赖版本与输出文件
 - **结果文件**：规范命名（无版本后缀）；历史版本由 git 管理，杜绝"论文引用 v1、磁盘是 v2"的漂移
 - **版本控制**：Git 管理代码与结果；`scripts/verify_consistency.py`（已装为本地 pre-commit 钩子）在每次提交时机械核对论文数字 ↔ 结果 CSV ↔ RUN_MANIFEST 代码版本，数字不一致即拒绝提交（§3.4.10）
+- **公开代码仓库**：全部代码、实验脚本、运行清单、一致性校验器与本版结果存档于匿名评审仓库 https://github.com/7Dt3V5TmzAtfur/HybridSimulation-InfoSaliency（录用后将归档并分配持久标识符）
 - 本版全部结果由统一再生协议在提交 `c0ae64e` 的代码上一次性生成，并经确定性复核：同种子全量重跑的九组实验结果文件与提交版本逐字节一致（RUN_MANIFEST 记录各次运行的代码版本、种子、依赖与输出清单）
 
 ---
@@ -794,6 +797,7 @@ OpenDengue v1.3 国家级抽取，BRAZIL，口径 Total，2019 自然年 52 周�
 | no_behavior_feedback | 220.6 ± 17.9 | 967.4 ± 7.3 | 0.000 | 432.0 ± 33.7 |
 | no_hospital_constraint | 149.7 ± 14.0 | 887.3 ± 17.9 | 0.371 | 0.0 ± 0.0 |
 | no_mosquito | 141.6 ± 18.6 | 839.4 ± 32.4 | 0.369 | 147.5 ± 61.5 |
+| no_human_transmission | 10.0 ± 0.0 | 14.2 ± 3.0 | 0.324 | 0.0 ± 0.0 |
 
 归因（变化%）：
 
@@ -803,6 +807,7 @@ OpenDengue v1.3 国家级抽取，BRAZIL，口径 Total，2019 自然年 52 周�
 | no_behavior_feedback | **+47.4** | +9.0 | -100.0 | +113.1 |
 | no_hospital_constraint | 0.0 | 0.0 | 0.0 | **-100.0** |
 | no_mosquito | **-5.4** | -5.4 | -0.7 | -27.2 |
+| no_human_transmission | **-93.3** | -98.4 | -12.8 | -100.0 |
 
 #### 4.7.3 关键发现
 
@@ -810,7 +815,8 @@ OpenDengue v1.3 国家级抽取，BRAZIL，口径 Total，2019 自然年 52 周�
 2. **信息显著性的单通道边际贡献在噪声范围内**：移除后峰值变化 -3.2%（略降，配对标准差 ±12–19 人内），峰值防护下降 7.8%（0.371→0.342）但未转化为峰值上升——与实验 5 的分解结论相互印证：当前参数化下，显著性通道贡献的约 +0.03 防护水平不具备流行病学杠杆
 3. **医疗资源约束不影响传播动力学**：移除后峰值/总感染/防护变化均为 0.0%（同种子集下轨迹完全一致——因入院不隔离传染源，床位约束不改变任何传播环节），唯一变化是延后入院 203→0（-100%）。此前版本报告的"移除床位约束使峰值上升 18.25%"是**单次运行随机流分叉的伪效应**：约束开关改变随机数消耗序列，单次运行差异被误归因为组件贡献。本版以配对重复消除了该伪效应
 4. **蚊媒通道贡献峰值约 5.4%**：移除后峰值与总感染均下降 5.4%——蚊媒通道贡献为正但有限（该份额随 α 变化，α 更高时显著性驱动的防护更强、两通道的相对配比随之变化，见 §4.3）
-5. **延后入院是 DES 层的有效输出**：床位收紧条件下延后入院 203 人，移除约束后为 0，行为反馈缺失时升至 432 人——资源压力指标对干预情景敏感，适合用于床位规划
+5. **人-人通道承载几乎全部传播（诚实的结构性量化）**：移除人-人项后疫情完全崩溃——全部 10 次运行的峰值恰等于 10 个初始感染者（-93.3%），蚊媒单独无法维持传播链。当前模型距离真正的蚊媒传播结构尚远，蚊媒通道的重新校准是最重要的后续开发任务（§5.5）
+6. **延后入院是 DES 层的有效输出**：床位收紧条件下延后入院 203 人，移除约束后为 0，行为反馈缺失时升至 432 人——资源压力指标对干预情景敏感，适合用于床位规划
 
 ### 4.8 实验 8：机制对照——awareness 扩散基线
 
@@ -837,6 +843,14 @@ OpenDengue v1.3 国家级抽取，BRAZIL，口径 Total，2019 自然年 52 周�
 2. **机制差异的来源是防护的时间形状**：A(t) 随疫情内生上升（0→0.68），防护恰好在传播最强阶段加大并在疫情后期维持；本文 S(t)→sigmoid 通道被中点锁定在低风险饱和区，全程近乎平坦（§4.5.3）
 3. **对文献对话的含义**：Fenichel et al. (2011) 强调行为动态改变疫情预测——本对照给出了一个可操作的例子：分解设计能诊断"哪个行为模块值得引入动态"；负结果（本文机制）与正结果（awareness 基线）互为参照
 4. **对框架的改进指向**：把本文的信息显著性通道与 prevalence 耦合的响应设计结合（如防护目标随 I/N 内生上调），是使"信息驱动"产生真实动态收益的具体路径（§5.5）
+
+#### 4.8.4 稳健性检验（实验 9/10）
+
+**（a）awareness 参数敏感性（实验 10）**：在 (p_A ∈ {0.15, 0.25, 0.35}) × (d_A ∈ {0.05, 0.1, 0.2}) 的 3×3 网格上（q=0.8，每配置重新二分标定 m\* 匹配平均防护），动态边际 **8/9 配置为正、7/9 显著**，范围 **+18.7 至 +48.2 个百分点**。唯一例外（p_A=0.35, d_A=0.05）是"快遗忘角"——awareness 紧贴 prevalence 波动，恒定防护在匹配水平下表现相当。结论：+22.5pp 的机制诊断不是单一参数化的产物。
+
+**（b）响应形状扫描（实验 9）**：把 sigmoid 中点 μ ∈ [0.3, 0.7]（步长 0.1）× 斜率 κ ∈ {1.5, 3.0} 全组合扫描（每组合三臂分解 × 10 次，P\* 按组合重标定，跨网格 0.126–0.405），本文显著性通道的动态边际始终在 **1.3–5.9 个百分点**之间且**无一显著**。即：窄动态范围不是默认中点的偶然产物，而是显著性→防护映射本身的属性；对比 awareness 模块的 prevalence 跟踪动态（兼具幅度与时序），改进路径明确（§5.5）。
+
+**（c）规模压缩机制的修正**：早熄灭（最终规模<半数人口）在所有臂的 10 次重复中均为 **0%**——N=1000→10⁴ 的峰值降低压缩（38.3%→24.8%）不来自流行病学消亡，而来自峰值占比的规模依赖：零防护臂峰值占比 22.2%→26.8%，完整模型臂仅 14.3%→20.1%，随机性在 N=1000 对两臂峰值的压低以保护臂相对更多。
 
 ### 4.9 结果总结
 
@@ -1016,6 +1030,8 @@ Kar et al. (2025) 的系统综述显示，医疗领域混合仿真以 DES+SD 为
 | 恒定防护复现绝大部分效应 | 实验 5/7 | 95%（N=1000）/ 85%（N=10⁴） | ✅ 已量化（跨规模成立） |
 | 信息显著性单通道贡献小 | 消融 | -3.2%（噪声内） | ✅ 诚实负结果 |
 | 动态边际小是响应饱和所致 | 实验 8 | awareness 基线同防护下 +22.5pp（p<0.001） | ✅ 机制诊断 |
+| 诊断跨参数与形状稳健 | 实验 9/10 | 3×3 网格 8/9 正、7/9 显著；形状扫描 1.3–5.9pp 全不显著 | ✅ 已验证 |
+| 人-人通道承载几乎全部传播 | 消融 | 移除后峰值 -93.3%（蚊媒单独不可维持） | ✅ 诚实结构性量化 |
 | 媒体放大边际效应有限 | 实验 3 | 20% 预设标准需 α≥5 | ⚠️ 部分验证 |
 | 真实数据校准成功（有形状边界） | 实验 4 | R²=0.941；大疫情季外推 0.79–0.94 | ✅ 已验证（范围限定） |
 | DES 作用于资源压力 | 消融 | 传播 0.0%，延后入院 -100% | ✅ 设计澄清 |
@@ -1041,7 +1057,7 @@ Kar et al. (2025) 的系统综述显示，医疗领域混合仿真以 DES+SD 为
 
 ### 6.3 研究局限性
 
-1. **模型简化**：人际直接传播项为简化代理；均匀混合；行为响应函数参数未校准（其饱和形状已被实验 8 定位为动态边际小的决定因素）；信息显著性为全局标量；DES 与传播解耦
+1. **模型简化**：人际直接传播项为简化代理且消融显示其承载几乎全部传播（-93.3%）——蚊媒通道的重新校准是最重要开发任务；均匀混合；行为响应函数参数未校准（其窄动态范围已被实验 8/9/10 定位）；信息显著性为全局标量；DES 与传播解耦
 2. **数据限制**：主校准单季 + 六季外推（大疫情季可转移、小年不可转移）；无季节驱动；报告率为拟合量；信息参数未校准
 3. **计算限制**：个体仿真规模 10³–10⁴，与真实城市尺度仍有差距
 
@@ -1082,31 +1098,33 @@ Kar et al. (2025) 的系统综述显示，医疗领域混合仿真以 DES+SD 为
 1. Ajzen, I. (1991). The theory of planned behavior. *Organizational Behavior and Human Decision Processes*, 50(2), 179-211.
 2. Bakshy, E., Rosenn, I., Marlow, C., & Adamic, L. (2012). The role of social networks in information diffusion. *Proceedings of the 21st ACM Conference on World Wide Web (WWW)*, 519-528.
 3. Barlas, Y. (1996). Formal aspects of model validity and validation in system dynamics. *System Dynamics Review*, 12(3), 183-210.
-4. Borshchev, A., & Filippov, A. (2004). From system dynamics and discrete event to practical agent based modeling: Reasons, techniques, tools. *Proceedings of the 22nd International Conference of the System Dynamics Society*.
-5. Brewer, N. T., Chapman, G. B., Gibbons, F. X., Gerrard, M., McCaul, K. D., & Weinstein, N. D. (2007). Meta-analysis of the relationship between risk perception and health behavior: The example of vaccination. *Health Psychology*, 26(2), 136-145.
-6. Centola, D. (2010). The spread of behavior in an online social network experiment. *Science*, 328(5983), 1269-1272.
-7. Chinazzi, M., Davis, J. T., Ajelli, M., et al. (2020). The effect of travel restrictions on the spread of the 2019 novel coronavirus (COVID-19) outbreak. *Science*, 368(6489), 395-400.
-8. Esteva, L., & Vargas, C. (1998). Analysis of a dengue disease transmission model. *Mathematical Biosciences*, 150(2), 131-151.
-9. Eubank, S., Guclu, H., Kumar, V. S. A., Marathe, M. V., Srinivasan, A., Toroczkai, Z., & Wang, N. (2004). Modelling disease outbreaks in realistic urban social networks. *Nature*, 429(6988), 180-184.
-10. Fenichel, E. P., Castillo-Chavez, C., Ceddia, M. G., et al. (2011). Adaptive human behavior in epidemiological models. *Proceedings of the National Academy of Sciences*, 108(15), 6306-6311.
-11. Ferguson, N., et al. (2020). Impact of non-pharmaceutical interventions (NPIs) to reduce COVID-19 mortality and healthcare demand. *Imperial College London COVID-19 Response Team, Report 9*.
-12. Ferrer, R., & Klein, W. (2015). Risk perceptions and health behavior. *Current Opinion in Psychology*, 5, 85-89.
-13. Funk, S., Gilad, E., Watkins, C., & Jansen, V. A. A. (2009). The spread of awareness and its impact on epidemic outbreaks. *Proceedings of the National Academy of Sciences*, 106(16), 6872-6877.
-14. Funk, S., Salathé, M., & Jansen, V. A. A. (2010). Modelling the influence of human behaviour on the spread of infectious diseases: A review. *Journal of the Royal Society Interface*, 7(50), 1247-1256.
-15. Harel, J., Koch, C., & Perona, P. (2007). Graph-based visual saliency. *Advances in Neural Information Processing Systems 19 (NIPS 2006)*.
-16. Kar, E., Fakhimi, M., Turner, C., & Eldabi, T. (2025). Hybrid simulation in healthcare: A systematic exploration of models, applications, and emerging trends. *Journal of Simulation*, 19(2), 231-249. https://doi.org/10.1080/17477778.2024.2354250
-17. Kraemer, M. U. G., et al. (2019). Past and future spread of the arbovirus vectors *Aedes aegypti* and *Aedes albopictus*. *Nature Microbiology*, 4(5), 854-863.
-18. Morgan, J. S., Howick, S., & Belton, V. (2017). A toolkit of designs for mixing Discrete Event Simulation and System Dynamics. *European Journal of Operational Research*, 257(3), 907-918.
-19. North, M. J., et al. (2010). Complex adaptive systems modeling with Repast Simphony. *Journal of Artificial Societies and Social Simulation*, 13(2), 3.
-20. OpenDengue. (2024). *OpenDengue national-level dengue case data extract v1.3*. https://opendengue.org/data.html
-21. Perra, N., Gonçalves, B., Pastor-Satorras, R., & Vespignani, A. (2012). Activity driven modeling of time varying networks. *Scientific Reports*, 2, 469.
-22. Prem, K., Liu, Y., Russell, T. W., et al. (2020). The effect of control strategies to reduce social mixing on outcomes of the COVID-19 epidemic in Wuhan, China: A modelling study. *The Lancet Public Health*, 5(5), e261-e270.
-23. Rogers, R. W. (1975). A protection motivation theory of fear appeals and attitude change. *The Journal of Psychology*, 91(1), 93-114.
-24. Rosenstock, I. M. (1974). Historical origins of the health belief model. *Health Education Monographs*, 2(4), 328-335.
-25. Sterman, J. (2000). *Business Dynamics: Systems Thinking and Modeling for a Complex World*. McGraw-Hill.
+4. Bedson, J., Skrip, L. A., Pedi, D., Abramowitz, S., et al. (2021). A review and agenda for integrated disease models including social and behavioural factors. *Nature Human Behaviour*, 5, 834-846.
+5. Borshchev, A., & Filippov, A. (2004). From system dynamics and discrete event to practical agent based modeling: Reasons, techniques, tools. *Proceedings of the 22nd International Conference of the System Dynamics Society, Oxford, England*. System Dynamics Society.
+6. Brewer, N. T., Chapman, G. B., Gibbons, F. X., Gerrard, M., McCaul, K. D., & Weinstein, N. D. (2007). Meta-analysis of the relationship between risk perception and health behavior: The example of vaccination. *Health Psychology*, 26(2), 136-145.
+7. Centola, D. (2010). The spread of behavior in an online social network experiment. *Science*, 328(5983), 1269-1272.
+8. Chinazzi, M., Davis, J. T., Ajelli, M., et al. (2020). The effect of travel restrictions on the spread of the 2019 novel coronavirus (COVID-19) outbreak. *Science*, 368(6489), 395-400.
+9. Esteva, L., & Vargas, C. (1998). Analysis of a dengue disease transmission model. *Mathematical Biosciences*, 150(2), 131-151.
+10. Eubank, S., Guclu, H., Kumar, V. S. A., Marathe, M. V., Srinivasan, A., Toroczkai, Z., & Wang, N. (2004). Modelling disease outbreaks in realistic urban social networks. *Nature*, 429(6988), 180-184.
+11. Fenichel, E. P., Castillo-Chavez, C., Ceddia, M. G., et al. (2011). Adaptive human behavior in epidemiological models. *Proceedings of the National Academy of Sciences*, 108(15), 6306-6311.
+12. Ferguson, N., et al. (2020). Impact of non-pharmaceutical interventions (NPIs) to reduce COVID-19 mortality and healthcare demand. *Imperial College London COVID-19 Response Team, Report 9*.
+13. Ferrer, R., & Klein, W. (2015). Risk perceptions and health behavior. *Current Opinion in Psychology*, 5, 85-89.
+14. Funk, S., Gilad, E., Watkins, C., & Jansen, V. A. A. (2009). The spread of awareness and its impact on epidemic outbreaks. *Proceedings of the National Academy of Sciences*, 106(16), 6872-6877.
+15. Funk, S., Salathé, M., & Jansen, V. A. A. (2010). Modelling the influence of human behaviour on the spread of infectious diseases: A review. *Journal of the Royal Society Interface*, 7(50), 1247-1256.
+16. Harel, J., Koch, C., & Perona, P. (2007). Graph-based visual saliency. *Advances in Neural Information Processing Systems 19 (NIPS 2006)*.
+17. Kar, E., Fakhimi, M., Turner, C., & Eldabi, T. (2025). Hybrid simulation in healthcare: A systematic exploration of models, applications, and emerging trends. *Journal of Simulation*, 19(2), 231-249. https://doi.org/10.1080/17477778.2024.2354250
+18. Kraemer, M. U. G., et al. (2019). Past and future spread of the arbovirus vectors *Aedes aegypti* and *Aedes albopictus*. *Nature Microbiology*, 4(5), 854-863.
+19. Morgan, J. S., Howick, S., & Belton, V. (2017). A toolkit of designs for mixing Discrete Event Simulation and System Dynamics. *European Journal of Operational Research*, 257(3), 907-918.
+20. North, M. J., et al. (2010). Complex adaptive systems modeling with Repast Simphony. *Journal of Artificial Societies and Social Simulation*, 13(2), 3.
+21. OpenDengue. (2024). *OpenDengue national-level dengue case data extract v1.3*. https://opendengue.org/data.html
+22. Perra, N., Gonçalves, B., Pastor-Satorras, R., & Vespignani, A. (2012). Activity driven modeling of time varying networks. *Scientific Reports*, 2, 469.
+23. Prem, K., Liu, Y., Russell, T. W., et al. (2020). The effect of control strategies to reduce social mixing on outcomes of the COVID-19 epidemic in Wuhan, China: A modelling study. *The Lancet Public Health*, 5(5), e261-e270.
+24. Rogers, R. W. (1975). A protection motivation theory of fear appeals and attitude change. *The Journal of Psychology*, 91(1), 93-114.
+25. Rosenstock, I. M. (1974). Historical origins of the health belief model. *Health Education Monographs*, 2(4), 328-335.
+26. Sterman, J. (2000). *Business Dynamics: Systems Thinking and Modeling for a Complex World*. McGraw-Hill.
+27. Verelst, F., Willem, L., & Beutels, P. (2016). Behavioural change models for infectious disease transmission: A systematic review (2010-2015). *Journal of The Royal Society Interface*, 13(125), 20160820.
 
 ---
 
-**文档版本**：2.1
+**文档版本**：2.2
 **最后更新**：2026-10-03
 **再生协议**：所有数字由统一协议一次性生成——种子公式、代码版本、依赖与输出清单见 `results/RUN_MANIFEST.yml`；结果文件使用规范名，历史版本由 git 管理；一致性由 `scripts/verify_consistency.py`（pre-commit 钩子）机械校验

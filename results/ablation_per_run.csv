@@ -49,3 +49,13 @@ peak_infected,peak_day,total_infected,peak_protection,deferred_admissions,condit
 168,68,873,0.37817334880417414,257,no_mosquito,7
 122,69,797,0.36158094793113865,95,no_mosquito,8
 153,61,799,0.37284849555031,187,no_mosquito,9
+10,0,10,0.32334762256162414,0,no_human_transmission,0
+10,0,12,0.3238082511942795,0,no_human_transmission,1
+10,0,12,0.32357789539602605,0,no_human_transmission,2
+10,0,16,0.32357789539602605,0,no_human_transmission,3
+10,0,19,0.32380825119427953,0,no_human_transmission,4
+10,0,14,0.3238082511942795,0,no_human_transmission,5
+10,0,19,0.323577895396026,0,no_human_transmission,6
+10,0,14,0.32357789539602605,0,no_human_transmission,7
+10,0,14,0.32380825119427953,0,no_human_transmission,8
+10,0,12,0.3238082511942795,0,no_human_transmission,9

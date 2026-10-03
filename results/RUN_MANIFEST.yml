@@ -244,3 +244,105 @@
     - ablation_attribution.csv
     - ablation_attribution_report.md
     - ablation_attribution.png
+- experiment: exp09
+  description: 响应形状扫描：S型中点×斜率对动态边际的影响
+  run_at: 2026-10-03T13:45:17
+  code_version: 18535fe90619c51519df317eede12d2bbe9566a8
+  base_seed: 1111
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 10
+  mu_grid: [0.3, 0.4, 0.5, 0.6, 0.7]
+  kappa_grid: [1.5, 3.0]
+  zero_peak: 221.9
+  zero_extinct_pct: 70.0
+  mosquito: on
+  protection_efficiency: 0.85
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp09_response_shape.csv
+    - exp09_per_run.csv
+- experiment: exp10
+  description: awareness 基线参数敏感性（(p_A,d_A) 3×3 mini-sweep）
+  run_at: 2026-10-03T13:45:23
+  code_version: 18535fe90619c51519df317eede12d2bbe9566a8
+  base_seed: 1212
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 5
+  p_A_grid: [0.15, 0.25, 0.35]
+  d_A_grid: [0.05, 0.1, 0.2]
+  q: 0.8
+  target_protection: 0.336
+  n_margin_positive: 8
+  n_margin_significant: 7
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp10_awareness_sensitivity.csv
+- experiment: ablation
+  description: 消融归因审计（5条件×10配对重复）
+  run_at: 2026-10-03T13:51:13
+  code_version: 18535fe90619c51519df317eede12d2bbe9566a8
+  base_seed: 707
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_condition: 10
+  conditions: ['baseline', 'no_info_saliency', 'no_behavior_feedback', 'no_hospital_constraint', 'no_mosquito', 'no_human_transmission']
+  hospital_beds: 50
+  icu_beds: 10
+  media_amplification: 1.0
+  attribution_convention: (ablated_mean - baseline_mean)/baseline_mean*100; positive = rises when removed
+  protection_efficiency: 0.85
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - ablation_per_run.csv
+    - ablation_summary.csv
+    - ablation_attribution.csv
+    - ablation_attribution_report.md
+    - ablation_attribution.png
+- experiment: exp09
+  description: 响应形状扫描：S型中点×斜率对动态边际的影响
+  run_at: 2026-10-03T13:53:22
+  code_version: 18535fe90619c51519df317eede12d2bbe9566a8
+  base_seed: 1111
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 10
+  mu_grid: [0.3, 0.4, 0.5, 0.6, 0.7]
+  kappa_grid: [1.5, 3.0]
+  zero_peak: 221.9
+  zero_fadeout_pct: 0.0
+  mosquito: on
+  protection_efficiency: 0.85
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp09_response_shape.csv
+    - exp09_per_run.csv

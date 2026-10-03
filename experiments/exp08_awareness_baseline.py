@@ -52,11 +52,15 @@ class AwarenessABM:
     行为模块替换为 awareness 扩散（动态）或冻结知情（恒定）。"""
 
     def __init__(self, population_size: int, m: float, mode: str, a_fixed: float = 0.0,
-                 seir_params: SEIRParams = None, mosquito_params: MosquitoParams = None):
+                 seir_params: SEIRParams = None, mosquito_params: MosquitoParams = None,
+                 p_a: float = None, q: float = None, d_a: float = None):
         self.N = population_size
         self.m = m
         self.mode = mode          # 'dynamic' | 'constant'
         self.a_fixed = a_fixed    # 恒定模式下的 A
+        self.p_A = p_a if p_a is not None else P_A   # 知情接触扩散系数（可覆盖）
+        self.q = q if q is not None else Q           # 感染驱动知情系数（可覆盖）
+        self.d_A = d_a if d_a is not None else D_A   # 知情遗忘率（可覆盖）
         self.sp = seir_params or SEIRParams()
         self.mosquito = MosquitoDynamicModel(mosquito_params or MosquitoParams())
         self.states = np.full(population_size, 'S', dtype=object)
@@ -90,8 +94,8 @@ class AwarenessABM:
         S = int(np.sum(self.states == 'S'))
         I = int(np.sum(self.states == 'I'))
         if self.mode == 'dynamic':
-            self.A = min(1.0, max(0.0, self.A + P_A * self.A * S / self.N
-                                  + Q * I / self.N - D_A * self.A))
+            self.A = min(1.0, max(0.0, self.A + self.p_A * self.A * S / self.N
+                                  + self.q * I / self.N - self.d_A * self.A))
         else:
             self.A = self.a_fixed
         P = min(1.0, self.m * self.A)

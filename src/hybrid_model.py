@@ -198,22 +198,23 @@ class RiskPerceptionModel:
 
 class BehaviorModel:
     """行为决策模型"""
-    
-    def __init__(self, sensitivity: float = 1.5):
+
+    def __init__(self, sensitivity: float = 1.5, midpoint: float = 0.5):
         self.sensitivity = sensitivity  # 风险感知敏感度
-    
+        self.midpoint = midpoint  # S型响应中点 R（默认0.5；扫描实验用）
+
     def update_protection(self, agent: Agent) -> float:
         """
         更新防护行为
-        
+
         Args:
             agent: 个体Agent
-        
+
         Returns:
             防护水平 [0, 1]
         """
-        # S型响应函数
-        protection = 1.0 / (1.0 + np.exp(-self.sensitivity * (agent.risk_perception - 0.5)))
+        # S型响应函数（中点为 self.midpoint）
+        protection = 1.0 / (1.0 + np.exp(-self.sensitivity * (agent.risk_perception - self.midpoint)))
         agent.protection_level = protection
         return protection
 
@@ -362,6 +363,7 @@ class HybridEpidemicModel:
                  media_amplification: float = 1.0,
                  enable_info_behavior_feedback: bool = True,
                  enable_mosquito_transmission: bool = True,
+                 enable_human_transmission: bool = True,
                  protection_override: float = None):
         """
         初始化混合仿真模型
@@ -382,6 +384,7 @@ class HybridEpidemicModel:
         self.des_params = des_params or DESParams()
         self.enable_info_behavior_feedback = enable_info_behavior_feedback
         self.enable_mosquito_transmission = enable_mosquito_transmission
+        self.enable_human_transmission = enable_human_transmission
         self.protection_override = protection_override
 
         # 初始化Agent
@@ -480,7 +483,8 @@ class HybridEpidemicModel:
             if agent.state == 'S':
                 # 感染概率：人-人传播通道与蚊媒传播通道均受防护水平调制
                 # （登革热个人防护的核心是防叮咬，故蚊媒通道同样乘以(1-ε×P)）
-                human_transmission_prob = effective_beta * counts['I'] / self.population_size
+                human_transmission_prob = (effective_beta * counts['I'] / self.population_size
+                                           if self.enable_human_transmission else 0.0)
                 if self.enable_mosquito_transmission:
                     mosquito_transmission_prob = mosquito_risk * (1 - self.seir_params.protection_efficiency * avg_protection)
                 else:

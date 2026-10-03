@@ -45,6 +45,7 @@ CONDITIONS = {
     'no_behavior_feedback': {'disable_behavior_feedback': True},
     'no_hospital_constraint': {'disable_hospital_constraint': True},
     'no_mosquito': {'disable_mosquito': True},
+    'no_human_transmission': {'disable_human_transmission': True},
 }
 
 METRICS = ['peak_infected', 'peak_day', 'total_infected', 'peak_protection', 'deferred_admissions']
@@ -70,6 +71,8 @@ def run_condition(config: dict, run_index: int) -> dict:
         model.hospital.params.icu_beds = 1_000_000
     if config.get('disable_mosquito'):
         model.enable_mosquito_transmission = False
+    if config.get('disable_human_transmission'):
+        model.enable_human_transmission = False
 
     model.seed_infection(num_initial=NUM_INITIAL)
     model.run(num_days=NUM_DAYS)
@@ -134,7 +137,8 @@ def main():
                  'no_info_saliency': '禁用信息显著性（media_amplification=0）',
                  'no_behavior_feedback': '禁用信息-行为反馈（防护=0）',
                  'no_hospital_constraint': '移除医疗资源约束（床位/ICU≈无限）',
-                 'no_mosquito': '禁用蚊媒传播通道'}
+                 'no_mosquito': '禁用蚊媒传播通道',
+                 'no_human_transmission': '禁用人-人传播通道（仅蚊媒）'}
     lines = []
     lines.append('# 归因审计报告（Ablation-Attribution Report）')
     lines.append('')
