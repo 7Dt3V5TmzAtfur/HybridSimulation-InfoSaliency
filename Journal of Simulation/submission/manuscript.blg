@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: manuscript.aux
+Reallocating 'name_of_file' (item size: 1) to 4 items.
+The style file: tfp.bst
+Reallocating 'name_of_file' (item size: 1) to 5 items.
+Database file #1: refs.bib
+Warning--empty pages in borshchev2004system
+You've used 23 entries,
+            2892 wiz_defined-function locations,
+            1205 strings with 13267 characters,
+and the built_in function-call counts, 10618 in all, are:
+= -- 834
+> -- 256
+< -- 2
++ -- 210
+- -- 64
+* -- 716
+:= -- 1083
+add.period$ -- 46
+call.type$ -- 23
+change.case$ -- 0
+chr.to.int$ -- 0
+cite$ -- 24
+duplicate$ -- 1152
+empty$ -- 1097
+format.name$ -- 80
+if$ -- 2312
+int.to.chr$ -- 0
+int.to.str$ -- 23
+missing$ -- 235
+newline$ -- 74
+num.names$ -- 23
+pop$ -- 505
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 172
+stack$ -- 0
+substring$ -- 763
+swap$ -- 603
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 1
+while$ -- 84
+width$ -- 25
+write$ -- 208
+(There was 1 warning)

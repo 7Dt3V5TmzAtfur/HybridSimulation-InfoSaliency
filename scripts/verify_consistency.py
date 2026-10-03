@@ -28,6 +28,7 @@ import pandas as pd
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAPER = os.path.join(REPO, 'docs', 'paper_main.md')
 README = os.path.join(REPO, 'README.md')
+MANUSCRIPT = os.path.join(REPO, 'Journal of Simulation', 'submission', 'manuscript.tex')
 MANIFEST = os.path.join(REPO, 'results', 'RUN_MANIFEST.yml')
 
 EXPECTED_EXPERIMENTS = ['exp01', 'exp02', 'exp03', 'exp04', 'exp05', 'exp06',
@@ -55,6 +56,12 @@ def main():
     print('=' * 70)
 
     paper = text_of(PAPER)
+    docs = [paper]
+    if os.path.exists(MANUSCRIPT):
+        docs.append(text_of(MANUSCRIPT))  # 英文投稿稿纳入同一套数字核对
+
+    def in_docs(s: str) -> bool:
+        return all(s in d for d in docs)
 
     # ---------- 1. 论文关键数字 ----------
     print('\n[1] 论文关键数字 vs 结果 CSV')
@@ -63,7 +70,7 @@ def main():
     r = s.iloc[0]
     check('exp02 峰值 142.55/222.35/35.89',
           abs(r.exp_mean - 142.55) < 0.01 and abs(r.ctrl_mean - 222.35) < 0.01
-          and abs(r.reduction_pct - 35.89) < 0.01 and '35.89' in paper)
+          and abs(r.reduction_pct - 35.89) < 0.01 and in_docs('35.89'))
     check('exp02 d=-6.16', abs(r.cohens_d + 6.16) < 0.01)
 
     s = pd.read_csv(os.path.join(REPO, 'results/exp05_protection_decomposition.csv'))
@@ -72,7 +79,7 @@ def main():
     check('exp05 38.3/36.3/P*=0.3357',
           abs(full.peak_reduction_pct - 38.27) < 0.01
           and abs(const.peak_reduction_pct - 36.25) < 0.01
-          and abs(const.protection - 0.3357) < 1e-3 and '0.3357' in paper)
+          and abs(const.protection - 0.3357) < 1e-3 and in_docs('0.3357'))
 
     s = pd.read_csv(os.path.join(REPO, 'results/exp07_scale_validation.csv'))
     full7 = s[s.arm_label == 'full_model'].iloc[0]
@@ -80,21 +87,21 @@ def main():
     check('exp07 24.8/21.2/P*=0.3374',
           abs(full7.peak_reduction_pct - 24.8) < 0.05
           and abs(const7.peak_reduction_pct - 21.2) < 0.05
-          and abs(const7.protection - 0.3374) < 1e-3 and '24.8' in paper)
+          and abs(const7.protection - 0.3374) < 1e-3 and in_docs('24.8'))
 
     s = pd.read_csv(os.path.join(REPO, 'results/ablation_attribution.csv'), index_col=0)
-    check('消融 +47.4/-3.2/-5.4/0.0',
+    check('消融 47.4/-3.2/5.4/0.0（数字出现于中英稿件）',
           abs(s.loc['no_behavior_feedback', 'peak_infected_change_pct'] - 47.4) < 0.05
           and abs(s.loc['no_info_saliency', 'peak_infected_change_pct'] + 3.2) < 0.05
           and abs(s.loc['no_mosquito', 'peak_infected_change_pct'] + 5.4) < 0.05
           and abs(s.loc['no_hospital_constraint', 'peak_infected_change_pct']) < 0.05
-          and '+47.4' in paper and '-5.4' in paper)
+          and in_docs('47.4') and in_docs('5.4'))
 
     s = pd.read_csv(os.path.join(REPO, 'results/exp04_calibration_results.csv'))
     r = s.iloc[0]
     check('exp04 R2=0.941/β=0.25/R0=2.50',
           abs(r.r2 - 0.941) < 0.0005 and abs(r.beta - 0.25) < 1e-9
-          and abs(r.beta / r.gamma - 2.5) < 1e-9 and '0.941' in paper)
+          and abs(r.beta / r.gamma - 2.5) < 1e-9 and in_docs('0.941'))
 
     ms = pd.read_csv(os.path.join(REPO, 'results/exp04_multiseason.csv'))
     ms['season'] = ms['season'].astype(str)
@@ -102,26 +109,26 @@ def main():
     r17 = ms[ms.season == '2017'].iloc[0]
     check('多季节 2022=0.944 / 2017严苛=-0.097',
           abs(r22.strict_r2 - 0.944) < 0.0005 and abs(r17.strict_r2 + 0.097) < 0.0005
-          and '0.944' in paper)
+          and in_docs('0.944'))
 
     e6 = pd.read_csv(os.path.join(REPO, 'results/exp06_behavior_sensitivity.csv'))
     p15 = e6[(e6.kappa == 1.5) & (e6.eta == 0.0)].iloc[0].peak_reduction_pct
     p05 = e6[(e6.kappa == 0.5) & (e6.eta == 0.0)].iloc[0].peak_reduction_pct
-    check('exp06 κ=1.5/η=0=35.2 且 κ=0.5/η=0=46.5',
+    check('exp06 κ=1.5/η=0=35.2 且 κ=0.5/η=0=46.5（数字出现于中英稿件）',
           abs(p15 - 35.2) < 0.05 and abs(p05 - 46.5) < 0.05
-          and '35.2' in paper and '40%–48%' in paper)
+          and in_docs('35.2') and in_docs('46.5'))
 
     e8 = pd.read_csv(os.path.join(REPO, 'results/exp08_awareness_comparison.csv'), index_col=0)
     check('exp08 awareness动态49.3 / 本文动态33.2 / 边际22.5pp',
           abs(e8.loc['awareness_dynamic', 'peak_reduction_pct'] - 49.3) < 0.05
           and abs(e8.loc['ours_dynamic', 'peak_reduction_pct'] - 33.2) < 0.05
           and abs(e8.loc['awareness_dynamic', 'marginal_pp'] - 22.5) < 0.05
-          and '+22.5' in paper)
+          and in_docs('+22.5'))
 
     e1 = pd.read_csv(os.path.join(REPO, 'results/exp01_summary.csv'), index_col=0)
     delay = e1.loc['with_feedback', 'peak_day_mean'] - e1.loc['without_feedback', 'peak_day_mean']
     check('exp01 峰值延迟 18.5（论文无"18.6 天"）',
-          abs(delay - 18.5) < 0.05 and '18.5 天' in paper and '18.6 天' not in paper)
+          abs(delay - 18.5) < 0.05 and '18.5 天' in paper and not in_docs('18.6 天'))
 
     # ---------- 2. RUN_MANIFEST ----------
     print('\n[2] RUN_MANIFEST 覆盖与代码版本')

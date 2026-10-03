@@ -1,0 +1,115 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\normalfont{#1}}
+\providecommand{\urlprefix}{}
+
+\bibitem{kraemer2019past}
+Kraemer, M.U.G.; et~al. Past and future spread of the arbovirus vectors {Aedes
+  aegypti} and {Aedes albopictus}, \emph{Nature Microbiology}  \textbf{2019},
+  \emph{4}~(5), 854--863.
+
+\bibitem{esteva1998analysis}
+Esteva, L.; Vargas, C. Analysis of a dengue disease transmission model,
+  \emph{Mathematical Biosciences}  \textbf{1998}, \emph{150}~(2), 131--151.
+
+\bibitem{funk2009spread}
+Funk, S.; Gilad, E.; Watkins, C.; Jansen, V.A.A. The spread of awareness and
+  its impact on epidemic outbreaks, \emph{Proceedings of the National Academy
+  of Sciences}  \textbf{2009}, \emph{106}~(16), 6872--6877.
+
+\bibitem{funk2010modelling}
+Funk, S.; Salath{\'e}, M.; Jansen, V.A.A. Modelling the influence of human
+  behaviour on the spread of infectious diseases: a review, \emph{Journal of
+  the Royal Society Interface}  \textbf{2010}, \emph{7}~(50), 1247--1256.
+
+\bibitem{perra2012activity}
+Perra, N.; Gon{\c{c}}alves, B.; Pastor-Satorras, R.; Vespignani, A. Activity
+  driven modeling of time varying networks, \emph{Scientific Reports}
+  \textbf{2012}, \emph{2}, 469.
+
+\bibitem{fenichel2011adaptive}
+Fenichel, E.P.; Castillo-Chavez, C.; Ceddia, M.G.; et~al. Adaptive human
+  behavior in epidemiological models, \emph{Proceedings of the National Academy
+  of Sciences}  \textbf{2011}, \emph{108}~(15), 6306--6311.
+
+\bibitem{kar2025hybrid}
+Kar, E.; Fakhimi, M.; Turner, C.; Eldabi, T. Hybrid simulation in healthcare: a
+  systematic exploration of models, applications, and emerging trends,
+  \emph{Journal of Simulation}  \textbf{2025}, \emph{19}~(2), 231--249.
+
+\bibitem{borshchev2004system}
+Borshchev, A.; Filippov, A. From system dynamics and discrete event to
+  practical agent based modeling: reasons, techniques, tools, In
+  \emph{Proceedings of the 22nd International Conference of the System Dynamics
+  Society}, 2004.
+
+\bibitem{morgan2017toolkit}
+Morgan, J.S.; Howick, S.; Belton, V. A toolkit of designs for mixing discrete
+  event simulation and system dynamics, \emph{European Journal of Operational
+  Research}  \textbf{2017}, \emph{257}~(3), 907--918.
+
+\bibitem{eubank2004modelling}
+Eubank, S.; Guclu, H.; Kumar, V.S.A.; Marathe, M.V.; Srinivasan, A.; Toroczkai,
+  Z.; Wang, N. Modelling disease outbreaks in realistic urban social networks,
+  \emph{Nature}  \textbf{2004}, \emph{429}~(6988), 180--184.
+
+\bibitem{ferguson2020impact}
+Ferguson, N.; et~al. \emph{Impact of non-pharmaceutical interventions ({NPIs})
+  to reduce {COVID}-19 mortality and healthcare demand}; Report~9; Imperial
+  College London COVID-19 Response Team, 2020.
+
+\bibitem{prem2020effect}
+Prem, K.; Liu, Y.; Russell, T.W.; et~al. The effect of control strategies to
+  reduce social mixing on outcomes of the {COVID}-19 epidemic in {Wuhan},
+  {China}: a modelling study, \emph{The Lancet Public Health}  \textbf{2020},
+  \emph{5}~(5), e261--e270.
+
+\bibitem{chinazzi2020effect}
+Chinazzi, M.; Davis, J.T.; Ajelli, M.; et~al. The effect of travel restrictions
+  on the spread of the 2019 novel coronavirus ({COVID}-19) outbreak,
+  \emph{Science}  \textbf{2020}, \emph{368}~(6489), 395--400.
+
+\bibitem{sterman2000business}
+Sterman, J. \emph{Business Dynamics: Systems Thinking and Modeling for a
+  Complex World}; McGraw-Hill, 2000.
+
+\bibitem{barlas1996formal}
+Barlas, Y. Formal aspects of model validity and validation in system dynamics,
+  \emph{System Dynamics Review}  \textbf{1996}, \emph{12}~(3), 183--210.
+
+\bibitem{centola2010spread}
+Centola, D. The spread of behavior in an online social network experiment,
+  \emph{Science}  \textbf{2010}, \emph{328}~(5983), 1269--1272.
+
+\bibitem{bakshy2012role}
+Bakshy, E.; Rosenn, I.; Marlow, C.; Adamic, L. The role of social networks in
+  information diffusion, In \emph{Proceedings of the 21st ACM Conference on
+  World Wide Web (WWW)}, 2012; pp 519--528.
+
+\bibitem{rosenstock1974historical}
+Rosenstock, I.M. Historical origins of the health belief model, \emph{Health
+  Education Monographs}  \textbf{1974}, \emph{2}~(4), 328--335.
+
+\bibitem{rogers1975protection}
+Rogers, R.W. A protection motivation theory of fear appeals and attitude
+  change, \emph{The Journal of Psychology}  \textbf{1975}, \emph{91}~(1),
+  93--114.
+
+\bibitem{ajzen1991theory}
+Ajzen, I. The theory of planned behavior, \emph{Organizational Behavior and
+  Human Decision Processes}  \textbf{1991}, \emph{50}~(2), 179--211.
+
+\bibitem{brewer2007meta}
+Brewer, N.T.; Chapman, G.B.; Gibbons, F.X.; Gerrard, M.; McCaul, K.D.;
+  Weinstein, N.D. Meta-analysis of the relationship between risk perception and
+  health behavior: the example of vaccination, \emph{Health Psychology}
+  \textbf{2007}, \emph{26}~(2), 136--145.
+
+\bibitem{ferrer2015risk}
+Ferrer, R.; Klein, W. Risk perceptions and health behavior, \emph{Current
+  Opinion in Psychology}  \textbf{2015}, \emph{5}, 85--89.
+
+\bibitem{opendengue2024}
+{The OpenDengue Project}. {OpenDengue} national-level dengue case data extract
+  v1.3, \url{https://opendengue.org/data.html}, 2024.
+
+\end{thebibliography}
