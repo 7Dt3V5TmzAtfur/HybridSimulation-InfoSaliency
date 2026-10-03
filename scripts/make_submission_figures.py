@@ -23,40 +23,87 @@ C_FULL = '#27ae60'
 
 
 def fig_framework():
-    """F1: 四层混合仿真框架与耦合。"""
-    fig, ax = plt.subplots(figsize=(7.2, 4.6))
+    """F1: four-layer hybrid simulation framework, vertical flow, no overlaps."""
+    fig, ax = plt.subplots(figsize=(8.2, 6.9))
     ax.axis('off')
-    boxes = [
-        (0.06, 0.74, 'ABM layer', 'Individual agents (S/E/I/R)\nRisk perception -> protection\nStochastic state transitions', '#d5f5e3'),
-        (0.53, 0.74, 'SD layer', 'SEIR dynamics\nInformation saliency S(t)\nRisk perception & inertia', '#d6eaf8'),
-        (0.53, 0.10, 'DES layer', 'Beds / ICU queues\nDeferred admissions\nCapacity constraints', '#fdebd0'),
-        (0.06, 0.10, 'Mosquito layer', 'Human-mosquito-human\nExtrinsic incubation period\nSeasonal factor (fixed)', '#fadbd8'),
-    ]
-    for x, y, title, body, color in boxes:
-        ax.add_patch(plt.Rectangle((x, y), 0.40, 0.20, facecolor=color,
-                                   edgecolor='black', linewidth=1.2))
-        ax.text(x + 0.02, y + 0.150, title, fontsize=12.5, fontweight='bold')
-        ax.text(x + 0.02, y + 0.03, body, fontsize=10, va='bottom', linespacing=1.35)
-    arrows = [
-        ((0.46, 0.87), (0.53, 0.87), 'aggregate\nS/E/I/R, protection', 'right'),
-        ((0.53, 0.79), (0.46, 0.79), 'saliency -> risk\nbeta_eff(t)', 'left'),
-        ((0.26, 0.74), (0.26, 0.30), 'infection risk\n<-> infected\nmosquitoes', 'mid'),
-        ((0.73, 0.74), (0.73, 0.30), 'admission requests /\nresource availability', 'mid'),
-    ]
-    for (x1, y1), (x2, y2), label, side in arrows:
-        ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle='<->', linewidth=1.2))
-        if side == 'right':
-            ax.text(0.497, 0.905, label, fontsize=9, ha='center')
-        elif side == 'left':
-            ax.text(0.497, 0.705, label, fontsize=9, ha='center')
-        elif side == 'mid':
-            ax.text((x1 + x2) / 2 + (0.013 if x1 < 0.4 else -0.013), (y1 + y2) / 2,
-                    label, fontsize=9, rotation=90, va='center',
-                    ha='left' if x1 < 0.4 else 'right')
-    ax.text(0.5, 0.985, r'Both transmission channels modulated by (1 - $\epsilon \cdot P_{\mathrm{avg}}$)',
-            fontsize=10, ha='center', style='italic')
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+
+    def box(x, y, w, h, title, body, color, title_fs=12.5, body_fs=9.2):
+        ax.add_patch(plt.Rectangle((x, y), w, h, facecolor=color,
+                                   edgecolor='black', linewidth=1.3))
+        ax.text(x + w / 2, y + h - 0.016, title, fontsize=title_fs,
+                fontweight='bold', ha='center', va='top')
+        ax.text(x + w / 2, y + h - 0.052, body, fontsize=body_fs,
+                ha='center', va='top', linespacing=1.5)
+
+    def arrow(x, y1, y2):
+        ax.annotate('', xy=(x, y2), xytext=(x, y1),
+                    arrowprops=dict(arrowstyle='-|>', linewidth=1.7, color='black'))
+
+    # ---- 顶部说明 ----
+    ax.text(0.40, 0.992, 'Both transmission channels modulated by (1 - eps·P\u0304)',
+            fontsize=10.5, ha='center', va='top', style='italic')
+
+    # ---- 层 1：SD（加高，容纳三行正文）----
+    box(0.16, 0.760, 0.52, 0.180, 'SD layer (information, behaviour)',
+        u'saliency:  S(t) = min(1, (I/N)·α·e^(−λt/100))\n'
+        u'risk:  R\u1d62(t) = (1−η)·R_target + η·R\u1d62(t−1)\n'
+        u'protection:  P\u1d62 = σ( κ(R\u1d62 − μ) ),  P\u0304 = mean P\u1d62',
+        '#d6eaf8')
+
+    # ---- 层 2：ABM ----
+    box(0.16, 0.470, 0.52, 0.130, 'ABM layer (individuals)',
+        u'agents with states S / E / I / R\n'
+        u'stochastic transitions;  P\u0304 in both channels',
+        '#d5f5e3')
+
+    # ---- 层 3：蚊媒（左）与 DES（右）----
+    box(0.005, 0.045, 0.375, 0.160, 'Mosquito layer',
+        u'humans → E_m → I_m → humans\n'
+        u'incubation 10 d, lifespan 14 d\n'
+        u'risk_m = b·p_mh·(I_m/M)',
+        '#fadbd8')
+    box(0.415, 0.045, 0.375, 0.160, 'DES layer (hospital)',
+        u'beds / ICU / testing queues\n'
+        u'deferred admissions (counted once)\n'
+        u'capacity constraints',
+        '#fdebd0')
+
+    # ---- 右侧调制说明框（独立区域）----
+    ax.text(0.895, 0.855,
+            u'modulation\n'
+            u'human:\n'
+            u'β(1−ε·P\u0304)·I/N\n'
+            u'mosquito:\n'
+            u'risk_m·(1−ε·P\u0304)',
+            fontsize=8.8, ha='center', va='center', linespacing=1.45,
+            bbox=dict(boxstyle='round,pad=0.4', facecolor='#f2f4f4', edgecolor='gray'))
+
+    # ---- SD <-> ABM（箭头 0.32 / 0.48；标签外侧单行×2）----
+    arrow(0.32, 0.760, 0.600)
+    ax.text(0.305, 0.680, u'saliency S(t)\nrisk targets ↓',
+            fontsize=9, ha='right', va='center', linespacing=1.45)
+    arrow(0.48, 0.600, 0.760)
+    ax.text(0.495, 0.680, u'aggregate (S,E,I,R)\nmean protection P\u0304 ↑',
+            fontsize=9, ha='left', va='center', linespacing=1.45)
+
+    # ---- ABM <-> Mosquito（箭头 0.10 / 0.245；标签单行化防撞）----
+    arrow(0.10, 0.470, 0.205)
+    ax.text(0.085, 0.3375, u'infected I(t) ↓',
+            fontsize=9, ha='right', va='center', linespacing=1.45)
+    arrow(0.245, 0.205, 0.470)
+    ax.text(0.262, 0.3375, u'risk_m ↑',
+            fontsize=9, ha='left', va='center', linespacing=1.45)
+
+    # ---- ABM <-> DES（箭头 0.505 / 0.66；标签单行化防撞）----
+    arrow(0.505, 0.470, 0.205)
+    ax.text(0.490, 0.3375, u'admissions ↓',
+            fontsize=9, ha='right', va='center', linespacing=1.45)
+    arrow(0.665, 0.205, 0.470)
+    ax.text(0.680, 0.3375, u'beds / ICU ↑',
+            fontsize=9, ha='left', va='center', linespacing=1.45)
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
     fig.savefig(os.path.join(OUT, 'fig1_framework.pdf'), bbox_inches='tight')
     fig.savefig(os.path.join(OUT, 'fig1_framework.png'), dpi=300, bbox_inches='tight')
     plt.close(fig)
