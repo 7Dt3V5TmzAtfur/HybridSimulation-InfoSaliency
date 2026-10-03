@@ -219,16 +219,22 @@ class BehaviorModel:
 
 
 class HospitalDES:
-    """DES层：医院资源离散事件仿真"""
-    
-    def __init__(self, params: DESParams):
+    """DES层：医院资源离散事件仿真
+
+    记账约定：deferred_count 统计"曾因资源不足未能即时入院"的**唯一病人**数
+    （普通床与ICU分别排队；排队病人在资源释放且尚未恢复时入院；恢复者出队）。
+    """
+
+    def __init__(self, params: DESParams, agent_lookup: Dict = None):
         self.params = params
+        self.agent_lookup = agent_lookup or {}
         self.occupied_beds = 0
         self.occupied_icu = 0
-        self.queue = []  # 等待住院的队列
+        self.queue = []  # 等待普通床位的队列 (day, agent_id)
+        self.icu_queue = []  # 等待ICU的队列 (day, agent_id)
         self.test_queue = []  # 检测队列
         self.discharge_events = []  # 出院事件
-        self.rejected_count = 0
+        self.deferred_count = 0  # 唯一延后入院病人数
     
     def request_admission(self, agent: Agent, day: int, severe: bool = False) -> bool:
         """
@@ -251,7 +257,12 @@ class HospitalDES:
                 heapq.heappush(self.discharge_events, (discharge_day, agent.id, 'icu'))
                 return True
             else:
-                self.rejected_count += 1
+                # ICU满员：加入ICU等待队列（同一病人只计一次延后）
+                if not agent.in_queue:
+                    heapq.heappush(self.icu_queue, (day, agent.id))
+                    agent.in_queue = True
+                    agent.queue_start_time = day
+                    self.deferred_count += 1
                 return False
         else:
             if self.occupied_beds < self.params.hospital_beds:
@@ -262,11 +273,12 @@ class HospitalDES:
                 heapq.heappush(self.discharge_events, (discharge_day, agent.id, 'bed'))
                 return True
             else:
-                # 加入等待队列
-                heapq.heappush(self.queue, (day, agent.id))
-                agent.in_queue = True
-                agent.queue_start_time = day
-                self.rejected_count += 1
+                # 床位满员：加入等待队列（同一病人只计一次延后）
+                if not agent.in_queue:
+                    heapq.heappush(self.queue, (day, agent.id))
+                    agent.in_queue = True
+                    agent.queue_start_time = day
+                    self.deferred_count += 1
                 return False
     
     def request_test(self, agent: Agent, day: int) -> bool:
@@ -313,31 +325,47 @@ class HospitalDES:
             test_day, agent_id = heapq.heappop(self.test_queue)
             tested += 1
         
-        # 处理等待队列（如果有床位释放）
+        # 处理ICU等待队列（资源释放且病人尚未恢复时入院）
+        while self.icu_queue and self.occupied_icu < self.params.icu_beds:
+            queue_day, agent_id = heapq.heappop(self.icu_queue)
+            agent = self.agent_lookup.get(agent_id)
+            if agent is None or agent.state != 'I':
+                continue  # 入院前已恢复（或不存在）：出队，不再占用资源
+            self.occupied_icu += 1
+            agent.hospital_admitted = True
+            agent.in_queue = False
+            discharge_day = day + self.params.avg_icu_stay
+            heapq.heappush(self.discharge_events, (discharge_day, agent_id, 'icu'))
+
+        # 处理普通床位等待队列（资源释放且病人尚未恢复时入院）
         while self.queue and self.occupied_beds < self.params.hospital_beds:
             queue_day, agent_id = heapq.heappop(self.queue)
+            agent = self.agent_lookup.get(agent_id)
+            if agent is None or agent.state != 'I':
+                continue  # 入院前已恢复（或不存在）：出队
             self.occupied_beds += 1
-            # 重新安排出院事件
-            wait_time = day - queue_day
-            discharge_day = day + self.params.avg_hospital_stay + wait_time
+            agent.hospital_admitted = True
+            agent.in_queue = False
+            discharge_day = day + self.params.avg_hospital_stay
             heapq.heappush(self.discharge_events, (discharge_day, agent_id, 'bed'))
-        
+
         return discharged, tested
 
 
 class HybridEpidemicModel:
     """混合仿真模型：ABM + SD + DES 三层耦合"""
     
-    def __init__(self, population_size: int = 1000, 
+    def __init__(self, population_size: int = 1000,
                  seir_params: SEIRParams = None,
                  des_params: DESParams = None,
                  mosquito_params: MosquitoParams = None,
                  media_amplification: float = 1.0,
                  enable_info_behavior_feedback: bool = True,
-                 enable_mosquito_transmission: bool = True):
+                 enable_mosquito_transmission: bool = True,
+                 protection_override: float = None):
         """
         初始化混合仿真模型
-        
+
         Args:
             population_size: 人口规模
             seir_params: SEIR参数
@@ -346,23 +374,26 @@ class HybridEpidemicModel:
             media_amplification: 媒体放大系数
             enable_info_behavior_feedback: 是否启用信息-行为反馈
             enable_mosquito_transmission: 是否启用蚊媒传播（登革热特有）
+            protection_override: 若非None，将人群平均防护水平固定为该值
+                （用于恒定防护对照实验，隔离"动态信息驱动"与"静态防护水平"的效应）
         """
         self.population_size = population_size
         self.seir_params = seir_params or SEIRParams()
         self.des_params = des_params or DESParams()
         self.enable_info_behavior_feedback = enable_info_behavior_feedback
         self.enable_mosquito_transmission = enable_mosquito_transmission
-        
+        self.protection_override = protection_override
+
         # 初始化Agent
         self.agents: List[Agent] = []
         for i in range(population_size):
             self.agents.append(Agent(id=i, state='S'))
-        
+
         # 初始化子模型
         self.info_model = InformationSaliencyModel(media_amplification=media_amplification)
         self.risk_model = RiskPerceptionModel()
         self.behavior_model = BehaviorModel()
-        self.hospital = HospitalDES(self.des_params)
+        self.hospital = HospitalDES(self.des_params, agent_lookup={a.id: a for a in self.agents})
         
         # 初始化蚊媒动态模型（登革热特有）
         if enable_mosquito_transmission:
@@ -379,7 +410,7 @@ class HybridEpidemicModel:
             'avg_protection': [],
             'hospital_beds': [],
             'hospital_icu': [],
-            'rejected': [],
+            'deferred_admissions': [],
             'effective_beta': [],
             'mosquito_risk': [],
             'infected_mosquitoes': []
@@ -437,17 +468,23 @@ class HybridEpidemicModel:
         # 计算全人群平均防护水平（用于感染概率）
         total_protection = sum(agent.protection_level for agent in self.agents)
         avg_protection = total_protection / self.population_size
-        # 修正：添加防护效率参数ε
-        # 即使100%防护，仍有15%的残余传播风险
+        # 恒定防护对照：固定平均防护水平（若设置）
+        if self.protection_override is not None:
+            avg_protection = self.protection_override
+        # 防护效率参数ε：即使100%防护，仍有(1-ε)的残余传播风险
         effective_beta = self.seir_params.beta_base * (1 - self.seir_params.protection_efficiency * avg_protection)
-        
+
         # 第二遍：状态转移（使用一致的平均防护水平）
         for agent in self.agents:
             # 状态转移
             if agent.state == 'S':
-                # 感染概率（受人-人传播和蚊媒传播影响）
+                # 感染概率：人-人传播通道与蚊媒传播通道均受防护水平调制
+                # （登革热个人防护的核心是防叮咬，故蚊媒通道同样乘以(1-ε×P)）
                 human_transmission_prob = effective_beta * counts['I'] / self.population_size
-                mosquito_transmission_prob = mosquito_risk if self.enable_mosquito_transmission else 0.0
+                if self.enable_mosquito_transmission:
+                    mosquito_transmission_prob = mosquito_risk * (1 - self.seir_params.protection_efficiency * avg_protection)
+                else:
+                    mosquito_transmission_prob = 0.0
                 total_infection_prob = min(1.0, human_transmission_prob + mosquito_transmission_prob)
                 
                 if np.random.random() < total_infection_prob:
@@ -469,8 +506,8 @@ class HybridEpidemicModel:
                     agent.detected = True
                     self.hospital.request_test(agent, day)
                 
-                # 住院
-                if not agent.hospital_admitted and np.random.random() < self.seir_params.hospitalization_rate:
+                # 住院（排队中的病人不重复请求）
+                if not agent.hospital_admitted and not agent.in_queue and np.random.random() < self.seir_params.hospitalization_rate:
                     severe = np.random.random() < 0.2  # 20%重症
                     self.hospital.request_admission(agent, day, severe)
                 
@@ -495,7 +532,7 @@ class HybridEpidemicModel:
         self.history['avg_protection'].append(avg_protection)
         self.history['hospital_beds'].append(self.hospital.occupied_beds)
         self.history['hospital_icu'].append(self.hospital.occupied_icu)
-        self.history['rejected'].append(self.hospital.rejected_count)
+        self.history['deferred_admissions'].append(self.hospital.deferred_count)
         self.history['effective_beta'].append(effective_beta)
         self.history['mosquito_risk'].append(mosquito_risk)
         self.history['infected_mosquitoes'].append(infected_mosquitoes)

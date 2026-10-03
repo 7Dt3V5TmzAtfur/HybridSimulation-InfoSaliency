@@ -325,7 +325,7 @@ def generate_summary_statistics(results_df: pd.DataFrame) -> Dict:
         'max_info_saliency': results_df['info_saliency'].max(),
         'max_hospital_beds': results_df['hospital_beds'].max(),
         'max_icu_beds': results_df['hospital_icu'].max(),
-        'total_rejected': results_df['rejected'].iloc[-1]
+        'total_deferred': results_df['deferred_admissions'].iloc[-1]
     }
     
     return stats

@@ -72,6 +72,40 @@ class DengueDataLoader:
         
         return df[['date', case_col]].rename(columns={case_col: 'cases'})
     
+    def load_opendengue_national(self, filepath: str,
+                                 country: str = "BRAZIL",
+                                 start: str = "2019-01-01",
+                                 end: str = "2019-12-31",
+                                 case_definition: str = "Probable") -> pd.DataFrame:
+        """
+        加载 OpenDengue v1.3 国家级数据抽取（National_extract_V1_3.csv 实际格式）。
+
+        实际列名：adm_0_name, calendar_start_date, calendar_end_date,
+                  dengue_total, T_res(Week/Year), case_definition_standardised
+
+        Args:
+            filepath: CSV 文件路径
+            country: adm_0_name 中的国家名（大写）
+            start / end: 日历窗口（含端点）
+            case_definition: 'Probable' 或 'Total'
+
+        Returns:
+            周度时间序列 DataFrame (date=周起始日, cases=周病例数)，按日期升序
+        """
+        df = pd.read_csv(filepath, low_memory=False)
+        df = df[df['adm_0_name'].str.upper() == country.upper()]
+        df = df[df['T_res'] == 'Week']  # 排除年度汇总行，避免重复计数
+        if case_definition:
+            df = df[df['case_definition_standardised'] == case_definition]
+        df['date'] = pd.to_datetime(df['calendar_start_date'])
+        df = df[(df['date'] >= start) & (df['date'] <= end)]
+        df = df.sort_values('date').reset_index(drop=True)
+        # 同一周起始日可能对应多条记录（不同数据源），取和
+        weekly = df.groupby('date', as_index=False)['dengue_total'].sum()
+        weekly = weekly.rename(columns={'dengue_total': 'cases'})
+        weekly['cases'] = weekly['cases'].astype(float)
+        return weekly[['date', 'cases']]
+
     def load_kaggle_dengue(self, filepath: str) -> pd.DataFrame:
         """
         加载Kaggle登革热数据集

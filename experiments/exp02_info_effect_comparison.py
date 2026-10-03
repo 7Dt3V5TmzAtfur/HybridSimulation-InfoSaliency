@@ -1,195 +1,151 @@
+# -*- coding: utf-8 -*-
 """
-实验2：信息效应定量对比
-验证信息显著性对疫情控制的独立效应
+实验2：信息-行为反馈效应的定量对比（统计检验）
+
+设计（见 results/RUN_MANIFEST.yml）：
+- 实验组：完整信息-行为耦合（蚊媒开）
+- 对照组：禁用信息-行为反馈（防护=0，蚊媒开）—— 注意：该对照隔离的是
+  "内生防护行为"整体，而非"信息显著性"单通道；单通道贡献见实验5分解。
+- 20 次独立重复（seed = 202*1000 + i），初始感染 10 人，media_amplification=1.0
+- 统计：Welch t 检验（不假设方差齐性）、Cohen's d（合并标准差）及 95% CI（bootstrap）
+输出：
+- results/exp02_statistics.csv   两组统计检验结果
+- results/exp02_per_run.csv      每次运行原始指标
+- results/exp02_info_effect.png  均值轨迹±标准带
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import matplotlib
-matplotlib.use('Agg')  # 使用非GUI后端
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from src.hybrid_model import HybridEpidemicModel, SEIRParams, DESParams
-from src.visualization import EpidemicVisualizer, generate_summary_statistics
+from scipy import stats
+
+from src.hybrid_model import HybridEpidemicModel
+from experiments.protocol import (NUM_DAYS, NUM_INITIAL, POPULATION_SIZE,
+                                  record_manifest, set_seed)
+
+N_RUNS = 20
+MEDIA_AMPLIFICATION = 1.0
+RNG = np.random.default_rng(20261003)  # 仅用于 bootstrap，与仿真种子分离
 
 
-def run_info_effect_experiment():
-    """运行信息效应定量实验"""
-    
-    print("=" * 60)
-    print("实验2：信息效应定量对比")
-    print("=" * 60)
-    
-    np.random.seed(42)
-    
-    population_size = 1000
-    num_days = 200
-    num_runs = 10  # 多次运行取平均
-    
-    # 实验组：完整信息-行为耦合
-    print(f"\n[实验组] 运行{num_runs}次仿真（信息-行为耦合）...")
-    peaks_exp = []
-    totals_exp = []
-    
-    for i in range(num_runs):
+def run_arm(feedback: bool) -> list:
+    out = []
+    for i in range(N_RUNS):
+        set_seed('exp02', i)
         model = HybridEpidemicModel(
-            population_size=population_size,
-            media_amplification=1.5,
-            enable_info_behavior_feedback=True
+            population_size=POPULATION_SIZE,
+            media_amplification=MEDIA_AMPLIFICATION,
+            enable_info_behavior_feedback=feedback,
+            enable_mosquito_transmission=True,
         )
-        model.seed_infection(num_initial=10)
-        model.run(num_days=num_days)
-        results = model.get_results()
-        
-        peaks_exp.append(results['I'].max())
-        totals_exp.append(results['R'].iloc[-1])
-    
-    # 对照组：无行为反馈（防护水平固定为0）
-    print(f"[对照组] 运行{num_runs}次仿真（无行为反馈）...")
-    peaks_ctrl = []
-    totals_ctrl = []
-    
-    for i in range(num_runs):
-        model = HybridEpidemicModel(
-            population_size=population_size,
-            media_amplification=1.5,
-            enable_info_behavior_feedback=False
-        )
-        model.seed_infection(num_initial=10)
-        model.run(num_days=num_days)
-        results = model.get_results()
-        
-        peaks_ctrl.append(results['I'].max())
-        totals_ctrl.append(results['R'].iloc[-1])
-    
-    # 计算统计
-    peak_exp_mean = np.mean(peaks_exp)
-    peak_exp_std = np.std(peaks_exp)
-    peak_ctrl_mean = np.mean(peaks_ctrl)
-    peak_ctrl_std = np.std(peaks_ctrl)
-    
-    total_exp_mean = np.mean(totals_exp)
-    total_exp_std = np.std(totals_exp)
-    total_ctrl_mean = np.mean(totals_ctrl)
-    total_ctrl_std = np.std(totals_ctrl)
-    
-    # 计算效应量
-    peak_reduction = (peak_ctrl_mean - peak_exp_mean) / peak_ctrl_mean * 100
-    total_reduction = (total_ctrl_mean - total_exp_mean) / total_ctrl_mean * 100
-    
-    print("\n" + "=" * 60)
-    print("定量结果（均值±标准差）")
-    print("=" * 60)
-    print(f"{'指标':<20} {'实验组':<20} {'对照组':<20} {'效应量':<15}")
-    print("-" * 75)
-    print(f"{'峰值感染':<20} {peak_exp_mean:.1f}±{peak_exp_std:.1f}   {peak_ctrl_mean:.1f}±{peak_ctrl_std:.1f}   ↓{peak_reduction:.1f}%")
-    print(f"{'总感染':<20} {total_exp_mean:.1f}±{total_exp_std:.1f}   {total_ctrl_mean:.1f}±{total_ctrl_std:.1f}   ↓{total_reduction:.1f}%")
-    
-    # 统计显著性检验
-    from scipy import stats
-    
-    t_stat_peak, p_value_peak = stats.ttest_ind(peaks_exp, peaks_ctrl)
-    t_stat_total, p_value_total = stats.ttest_ind(totals_exp, totals_ctrl)
-    
-    print("\n" + "=" * 60)
-    print("统计检验（独立样本t检验）")
-    print("=" * 60)
-    print(f"峰值感染: t={t_stat_peak:.3f}, p={p_value_peak:.4f} {'***' if p_value_peak < 0.001 else '**' if p_value_peak < 0.01 else '*' if p_value_peak < 0.05 else 'ns'}")
-    print(f"总感染:   t={t_stat_total:.3f}, p={p_value_total:.4f} {'***' if p_value_total < 0.001 else '**' if p_value_total < 0.01 else '*' if p_value_total < 0.05 else 'ns'}")
-    
-    # 可视化
-    print("\n生成可视化图表...")
-    
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    
-    # 1. 峰值感染箱线图
-    ax1 = axes[0, 0]
-    ax1.boxplot([peaks_exp, peaks_ctrl])
-    ax1.set_xticklabels(['With Feedback', 'Without Feedback'])
-    ax1.set_ylabel('Peak Infected')
-    ax1.set_title('Peak Infection Distribution')
-    ax1.grid(True, alpha=0.3, axis='y')
-    
-    # 2. 总感染箱线图
-    ax2 = axes[0, 1]
-    ax2.boxplot([totals_exp, totals_ctrl])
-    ax2.set_xticklabels(['With Feedback', 'Without Feedback'])
-    ax2.set_ylabel('Total Infected')
-    ax2.set_title('Final Epidemic Size Distribution')
-    ax2.grid(True, alpha=0.3, axis='y')
-    
-    # 3. 效应量柱状图
-    ax3 = axes[1, 0]
-    effects = [peak_reduction, total_reduction]
-    labels = ['Peak Reduction', 'Total Reduction']
-    colors = ['red', 'orange']
-    bars = ax3.bar(labels, effects, color=colors, alpha=0.7)
-    ax3.set_ylabel('Reduction (%)')
-    ax3.set_title('Effect Size of Information-Behavior Feedback')
-    ax3.axhline(y=20, color='green', linestyle='--', label='20% Threshold')
-    ax3.legend()
-    ax3.grid(True, alpha=0.3, axis='y')
-    
-    # 添加数值标签
-    for bar, effect in zip(bars, effects):
-        height = bar.get_height()
-        ax3.text(bar.get_x() + bar.get_width()/2., height,
-                f'{effect:.1f}%', ha='center', va='bottom')
-    
-    # 4. 时间序列对比（单次运行）
-    ax4 = axes[1, 1]
-    model_exp = HybridEpidemicModel(
-        population_size=population_size,
-        media_amplification=1.5,
-        enable_info_behavior_feedback=True
-    )
-    model_exp.seed_infection(num_initial=10)
-    model_exp.run(num_days=num_days)
-    results_exp = model_exp.get_results()
-    
-    model_ctrl = HybridEpidemicModel(
-        population_size=population_size,
-        media_amplification=1.5,
-        enable_info_behavior_feedback=False
-    )
-    model_ctrl.seed_infection(num_initial=10)
-    model_ctrl.run(num_days=num_days)
-    results_ctrl = model_ctrl.get_results()
-    
-    dates = np.arange(num_days)
-    ax4.plot(dates, results_exp['I'], label='With Feedback', color='blue', linewidth=2)
-    ax4.plot(dates, results_ctrl['I'], label='Without Feedback', color='red', linewidth=2)
-    ax4.set_xlabel('Day')
-    ax4.set_ylabel('Infected Count')
-    ax4.set_title('Infection Curves Comparison')
-    ax4.legend()
-    ax4.grid(True, alpha=0.3)
-    
+        model.seed_infection(num_initial=NUM_INITIAL)
+        model.run(num_days=NUM_DAYS)
+        df = model.get_results()
+        out.append({
+            'run': i, 'arm': 'feedback' if feedback else 'control',
+            'peak_infected': int(df['I'].max()),
+            'peak_day': int(df['I'].idxmax()),
+            'total_infected': int(df['R'].iloc[-1]),
+            'time_avg_protection': float(df['avg_protection'].mean()),
+            'max_protection': float(df['avg_protection'].max()),
+        })
+    return out
+
+
+def cohens_d(a, b):
+    """Cohen's d（合并标准差），及 bootstrap 95% CI。"""
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    na, nb = len(a), len(b)
+    pooled = np.sqrt(((na - 1) * a.var(ddof=1) + (nb - 1) * b.var(ddof=1)) / (na + nb - 2))
+    d = (a.mean() - b.mean()) / pooled
+    boots = []
+    combined_size = (na, nb)
+    for _ in range(2000):
+        ra = RNG.choice(a, size=na, replace=True)
+        rb = RNG.choice(b, size=nb, replace=True)
+        p2 = np.sqrt(((na - 1) * ra.var(ddof=1) + (nb - 1) * rb.var(ddof=1)) / (na + nb - 2))
+        boots.append((ra.mean() - rb.mean()) / p2)
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    return d, lo, hi
+
+
+def main():
+    print('=' * 70)
+    print(f'实验2：信息-行为反馈定量对比（每组{N_RUNS}次独立重复，Welch t 检验）')
+    print('=' * 70)
+
+    records = run_arm(True) + run_arm(False)
+    per_run = pd.DataFrame(records)
+    exp = per_run[per_run['arm'] == 'feedback']
+    ctrl = per_run[per_run['arm'] == 'control']
+
+    rows = []
+    for metric in ('peak_infected', 'total_infected'):
+        a = exp[metric].to_numpy(float)
+        b = ctrl[metric].to_numpy(float)
+        t, p = stats.ttest_ind(a, b, equal_var=False)
+        d, dlo, dhi = cohens_d(a, b)
+        rows.append({
+            'metric': metric,
+            'exp_mean': a.mean(), 'exp_std': a.std(ddof=1),
+            'ctrl_mean': b.mean(), 'ctrl_std': b.std(ddof=1),
+            'reduction_pct': (b.mean() - a.mean()) / b.mean() * 100,
+            'welch_t': t, 'p_value': p,
+            'cohens_d': d, 'd_ci95_low': dlo, 'd_ci95_high': dhi,
+        })
+        print(f"{metric}: 实验 {a.mean():.2f}±{a.std(ddof=1):.2f} vs 对照 {b.mean():.2f}±{b.std(ddof=1):.2f} | "
+              f"降低 {rows[-1]['reduction_pct']:.2f}% | Welch t={t:.2f}, p={p:.3g} | d={d:.2f} [{dlo:.2f},{dhi:.2f}]")
+
+    out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+    per_run.to_csv(os.path.join(out_dir, 'exp02_per_run.csv'), index=False)
+    pd.DataFrame(rows).to_csv(os.path.join(out_dir, 'exp02_statistics.csv'), index=False)
+
+    # 均值轨迹 ± 标准带（重跑轨迹，仅绘图用）
+    curves = {'feedback': [], 'control': []}
+    for arm, feedback in (('feedback', True), ('control', False)):
+        for i in range(N_RUNS):
+            set_seed('exp02', i)
+            model = HybridEpidemicModel(
+                population_size=POPULATION_SIZE,
+                media_amplification=MEDIA_AMPLIFICATION,
+                enable_info_behavior_feedback=feedback,
+                enable_mosquito_transmission=True,
+            )
+            model.seed_infection(num_initial=NUM_INITIAL)
+            model.run(num_days=NUM_DAYS)
+            curves[arm].append(model.get_results()['I'].to_numpy())
+    fig, ax = plt.subplots(figsize=(12, 5.5))
+    days = np.arange(NUM_DAYS)
+    for arm, color in (('feedback', '#2ecc71'), ('control', '#e74c3c')):
+        arr = np.vstack(curves[arm])
+        ax.plot(days, arr.mean(axis=0), color=color, label=f'{arm} (mean)')
+        ax.fill_between(days, arr.mean(axis=0) - arr.std(axis=0),
+                        arr.mean(axis=0) + arr.std(axis=0), color=color, alpha=0.2)
+    ax.set_xlabel('Day'); ax.set_ylabel('Infected (I)')
+    ax.set_title(f'Info-behavior feedback effect (n={N_RUNS}/arm, mean±std)')
+    ax.legend(); ax.grid(alpha=0.3)
     plt.tight_layout()
-    
-    os.makedirs('results', exist_ok=True)
-    save_path = 'results/exp02_info_effect.png'
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"\n[OK] 实验完成！图表已保存到: {save_path}")
-    
-    return {
-        'peak_exp': peaks_exp,
-        'peak_ctrl': peaks_ctrl,
-        'total_exp': totals_exp,
-        'total_ctrl': totals_ctrl,
-        'peak_reduction': peak_reduction,
-        'total_reduction': total_reduction,
-        'p_value_peak': p_value_peak,
-        'p_value_total': p_value_total
-    }
+    fig.savefig(os.path.join(out_dir, 'exp02_info_effect.png'), dpi=150)
+    plt.close(fig)
+
+    p_star = per_run.loc[per_run['arm'] == 'feedback', 'time_avg_protection'].mean()
+    print(f'\n实验组时间平均防护水平 P* = {p_star:.4f}（供实验5恒定防护对照使用）')
+
+    record_manifest('exp02', '信息-行为反馈定量对比（Welch t + Cohen d）',
+                    {'population': POPULATION_SIZE, 'days': NUM_DAYS,
+                     'initial_infected': NUM_INITIAL, 'media_amplification': MEDIA_AMPLIFICATION,
+                     'runs_per_arm': N_RUNS, 'mosquito': 'on',
+                     'protection_efficiency': 0.85, 'control': 'protection=0 (feedback off)',
+                     'time_avg_protection_exp_arm': round(float(p_star), 4)},
+                    ['exp02_statistics.csv', 'exp02_per_run.csv', 'exp02_info_effect.png'])
 
 
-if __name__ == "__main__":
-    results = run_info_effect_experiment()
-    
-    print("\n" + "=" * 60)
-    print("实验2完成")
-    print("=" * 60)
+if __name__ == '__main__':
+    main()

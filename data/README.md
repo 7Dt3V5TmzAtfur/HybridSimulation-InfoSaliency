@@ -12,32 +12,27 @@
 - 包含月度/年度病例数
 - 免费开放获取
 
-**下载步骤**：
-1. 访问上述网址
-2. 点击"Download Data"
-3. 选择"Country-level data (CSV)"
-4. 下载后保存到 `data/opendengue.csv`
+**本仓库数据**：`data/National_extract_V1_3.csv`（OpenDengue v1.3 国家级数据抽取，已提交）。
+实验 4 使用的口径：国家=BRAZIL，case_definition=Total（该口径覆盖 2016-2023；Probable 仅覆盖 2015），周分辨率，2019 自然年（52 周）。
 
-**数据格式**：
-```csv
-country,location,date,total_cases,dengue_type
-Brazil,Sao Paulo,2020-01-01,1234,DENV-1
-Brazil,Sao Paulo,2020-02-01,2345,DENV-1
-...
-```
-
-**加载代码**：
+**加载代码（实际格式）**：
 ```python
 from src.data_loader import DengueDataLoader
 
 loader = DengueDataLoader()
-df = loader.load_opendengue(
-    filepath='data/opendengue.csv',
-    country='Brazil',
-    start_year=2010,
-    end_year=2023
+df = loader.load_opendengue_national(
+    filepath='data/National_extract_V1_3.csv',
+    country='BRAZIL',
+    start='2019-01-01',
+    end='2019-12-31',
+    case_definition='Total'   # 实际列: adm_0_name / calendar_start_date / dengue_total / T_res / case_definition_standardised
 )
 ```
+
+如需更新数据：访问上述网址，下载最新 national-level extract（CSV），替换 `data/National_extract_V1_3.csv`（旧版本由 git 管理）。
+
+**旧版说明**：此前文档所述"下载后保存为 `data/opendengue.csv`"的简化格式与实际数据不符，
+是 2026-10-03 之前"论文声称用真实数据、实际管线跑合成数据"不一致的根源之一，已修正。
 
 ---
 

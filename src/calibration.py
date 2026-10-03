@@ -1,227 +1,169 @@
+# -*- coding: utf-8 -*-
 """
-参数校准模块
-用于将真实登革热数据拟合到混合仿真模型
+参数校准模块（确定性等效系统 + 网格搜索）
+
+方法说明（与论文 §3.4.4 一致）：
+- 直接在随机 ABM 上做梯度优化（旧实现）在方法论上不成立：目标函数含仿真噪声，
+  L-BFGS-B 的梯度估计无意义，且单次评估代价高。
+- 本模块构造与 HybridEpidemicModel **期望动力学同构**的确定性替代系统
+  （DeterministicSurrogate）：相同的 SEIR 转移、蚊媒差分方程、信息显著性-风险感知-
+  防护行为方程、防护调制（ε），感染 hazard 与 ABM 的单步伯努利抽样期望一致。
+- 校准在替代系统上做**网格搜索**（论文口径），报告率 ρ（感染→报告病例的比例）
+  对每个网格点用最小二乘闭式解（标准做法：法定传染病存在漏报）。
+- 拟合参数随后代入 ABM 复核替代系统与个体仿真的机制一致性（见 exp04）。
 """
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
-from typing import Tuple, Dict
-import sys
-import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.hybrid_model import HybridEpidemicModel, SEIRParams, DESParams
+from src.hybrid_model import MosquitoParams, SEIRParams
+
+# 与模型默认一致的信息-行为参数
+INFO_WEIGHT = 0.6
+SOCIAL_WEIGHT = 0.3
+PERSONAL_WEIGHT = 0.1
+INERTIA = 0.3
+KAPPA = 1.5
+DECAY_RATE = 0.1
+MOSQUITO_PER_HUMAN = 5.0  # 蚊子/人口比例（与参考配置 N=1000, M=5000 一致）
 
 
-class ModelCalibrator:
-    """模型校准器"""
-    
-    def __init__(self, real_data: pd.DataFrame, population: int = 1000000):
-        """
-        初始化校准器
-        
-        Args:
-            real_data: 真实数据DataFrame (date, cases)
-            population: 人口规模
-        """
-        self.real_data = real_data.copy()
+class DeterministicSurrogate:
+    """与 HybridEpidemicModel 期望动力学同构的确定性替代系统。"""
+
+    def __init__(self, population: int,
+                 seir_params: SEIRParams = None,
+                 media_amplification: float = 1.0,
+                 mosquito_params: MosquitoParams = None):
         self.population = population
-        
-        # 预处理真实数据
-        self.real_cases = real_data['cases'].values
-        self.num_days = len(self.real_cases)
-    
-    def objective_function(self, params: np.ndarray) -> float:
-        """
-        目标函数：计算模拟与真实数据的误差
-        
-        Args:
-            params: 参数向量 [beta_base, sigma, gamma, media_amplification]
-        
+        self.sp = seir_params or SEIRParams()
+        self.media_amplification = media_amplification
+        self.mp = mosquito_params or MosquitoParams()
+
+    def run(self, num_days: int, i0: int, e0: int):
+        """日步长显式欧拉积分。
+
         Returns:
-            误差值（均方根误差）
+            dict with arrays: S, E, I, R, incidence (每日新感染), protection
         """
-        # 解包参数
-        beta_base, sigma, gamma, media_amp = params
-        
-        # 创建模型
-        seir_params = SEIRParams(
-            beta_base=beta_base,
-            sigma=sigma,
-            gamma=gamma
-        )
-        
-        model = HybridEpidemicModel(
-            population_size=self.population,
-            seir_params=seir_params,
-            media_amplification=media_amp,
-            enable_info_behavior_feedback=True
-        )
-        
-        # 种子感染
-        model.seed_infection(num_initial=10)
-        
-        # 运行仿真
-        model.run(num_days=self.num_days)
-        
-        # 获取结果
-        results = model.get_results()
-        simulated_cases = results['I'].values
-        
-        # 计算误差（均方根误差）
-        rmse = np.sqrt(np.mean((simulated_cases - self.real_cases) ** 2))
-        
-        # 添加正则化项（避免极端参数）
-        regularization = 0.01 * np.sum(params ** 2)
-        
-        return rmse + regularization
-    
-    def calibrate(self, initial_params: np.ndarray = None,
-                 bounds: list = None) -> Tuple[np.ndarray, float]:
-        """
-        校准模型参数
-        
-        Args:
-            initial_params: 初始参数 [beta_base, sigma, gamma, media_amplification]
-            bounds: 参数边界
-        
-        Returns:
-            (最优参数, 最小误差)
-        """
-        if initial_params is None:
-            initial_params = np.array([0.3, 0.2, 0.1, 1.0])
-        
-        if bounds is None:
-            bounds = [
-                (0.1, 0.5),  # beta_base
-                (0.1, 0.5),  # sigma
-                (0.05, 0.2),  # gamma
-                (0.5, 3.0)   # media_amplification
-            ]
-        
-        print("开始参数校准...")
-        print(f"初始参数: beta={initial_params[0]:.3f}, sigma={initial_params[1]:.3f}, "
-              f"gamma={initial_params[2]:.3f}, media_amp={initial_params[3]:.3f}")
-        
-        # 使用L-BFGS-B优化
-        result = minimize(
-            self.objective_function,
-            initial_params,
-            method='L-BFGS-B',
-            bounds=bounds,
-            options={'maxiter': 100, 'disp': True}
-        )
-        
-        optimal_params = result.x
-        min_error = result.fun
-        
-        print(f"\n校准完成!")
-        print(f"最优参数: beta={optimal_params[0]:.3f}, sigma={optimal_params[1]:.3f}, "
-              f"gamma={optimal_params[2]:.3f}, media_amp={optimal_params[3]:.3f}")
-        print(f"最小误差(RMSE): {min_error:.2f}")
-        
-        return optimal_params, min_error
-    
-    def validate(self, params: np.ndarray, test_ratio: float = 0.2) -> Dict:
-        """
-        验证模型（训练集/测试集分割）
-        
-        Args:
-            params: 校准后的参数
-            test_ratio: 测试集比例
-        
-        Returns:
-            验证结果字典
-        """
-        split_idx = int(self.num_days * (1 - test_ratio))
-        
-        # 使用给定参数运行完整仿真
-        seir_params = SEIRParams(
-            beta_base=params[0],
-            sigma=params[1],
-            gamma=params[2]
-        )
-        
-        model = HybridEpidemicModel(
-            population_size=self.population,
-            seir_params=seir_params,
-            media_amplification=params[3],
-            enable_info_behavior_feedback=True
-        )
-        model.seed_infection(num_initial=10)
-        model.run(num_days=self.num_days)
-        
-        full_results = model.get_results()
-        
-        # 训练集验证
-        train_real = self.real_data.iloc[:split_idx]['cases'].values
-        train_simulated = full_results['I'].values[:split_idx]
-        train_rmse = np.sqrt(np.mean((train_simulated - train_real) ** 2))
-        
-        # 测试集验证
-        test_real = self.real_data.iloc[split_idx:]['cases'].values
-        test_simulated = full_results['I'].values[split_idx:]
-        test_rmse = np.sqrt(np.mean((test_simulated - test_real) ** 2))
-        
-        # 计算R2
-        train_ss_res = np.sum((train_real - train_simulated) ** 2)
-        train_ss_tot = np.sum((train_real - np.mean(train_real)) ** 2)
-        train_r2 = 1 - (train_ss_res / train_ss_tot) if train_ss_tot > 0 else 0
-        
-        test_ss_res = np.sum((test_real - test_simulated) ** 2)
-        test_ss_tot = np.sum((test_real - np.mean(test_real)) ** 2)
-        test_r2 = 1 - (test_ss_res / test_ss_tot) if test_ss_tot > 0 else 0
-        
-        validation_results = {
-            'train_rmse': train_rmse,
-            'test_rmse': test_rmse,
-            'train_r2': train_r2,
-            'test_r2': test_r2,
-            'train_size': split_idx,
-            'test_size': self.num_days - split_idx
-        }
-        
-        print("\n验证结果:")
-        print(f"训练集 RMSE: {train_rmse:.2f}, R2: {train_r2:.3f}")
-        print(f"测试集 RMSE: {test_rmse:.2f}, R2: {test_r2:.3f}")
-        
-        return validation_results
+        N = float(self.population)
+        sp, mp = self.sp, self.mp
+        M = max(1.0, MOSQUITO_PER_HUMAN * N)
+
+        S, E, I, R = N - i0 - e0, float(e0), float(i0), 0.0
+        Me = Mi = 0.0
+        risk_prev = 0.0
+
+        S_arr = np.empty(num_days); E_arr = np.empty(num_days)
+        I_arr = np.empty(num_days); R_arr = np.empty(num_days)
+        inc_arr = np.empty(num_days); prot_arr = np.empty(num_days)
+
+        for t in range(num_days):
+            # 信息显著性（与 InformationSaliencyModel 相同）
+            sal = min(1.0, (I / N) * self.media_amplification * np.exp(-DECAY_RATE * t / 100))
+            # 风险感知（与 RiskPerceptionModel 相同；个人经历期望 = (E+I)/N）
+            target = (INFO_WEIGHT * sal + SOCIAL_WEIGHT * (I / N)
+                      + PERSONAL_WEIGHT * ((E + I) / N))
+            risk_level = (1 - INERTIA) * target + INERTIA * risk_prev
+            risk_prev = risk_level
+            # 防护行为（与 BehaviorModel 相同）
+            P = 1.0 / (1.0 + np.exp(-KAPPA * (risk_level - 0.5)))
+            prot_arr[t] = P
+
+            # 蚊媒差分方程（与 MosquitoDynamicModel 相同）
+            new_exposed_m = mp.biting_rate * mp.transmission_human_to_mosquito * I \
+                * max(0.0, (M - Mi - Me)) / M
+            new_infected_m = Me / mp.extrinsic_incubation_period
+            death_m = Mi / mp.mosquito_lifespan
+            Me = max(0.0, Me + new_exposed_m - new_infected_m)
+            Mi = max(0.0, Mi + new_infected_m - death_m)
+            risk_m = min(1.0, mp.biting_rate * mp.transmission_mosquito_to_human
+                         * (Mi / M) * mp.seasonal_factor)
+
+            # 感染 hazard：两通道均受防护调制（与模型 step() 相同）
+            beta_eff = sp.beta_base * (1 - sp.protection_efficiency * P)
+            hazard = min(1.0, beta_eff * I / N
+                         + risk_m * (1 - sp.protection_efficiency * P))
+            new_infections = hazard * S
+
+            # SEIR 转移（期望动力学）
+            e_to_i = sp.sigma * E
+            i_to_r = sp.gamma * I
+            S = S - new_infections
+            E = E + new_infections - e_to_i
+            I = I + e_to_i - i_to_r
+            R = R + i_to_r
+
+            S_arr[t] = S; E_arr[t] = E; I_arr[t] = I; R_arr[t] = R
+            inc_arr[t] = new_infections
+
+        return {'S': S_arr, 'E': E_arr, 'I': I_arr, 'R': R_arr,
+                'incidence': inc_arr, 'protection': prot_arr}
 
 
-def estimate_basic_reproduction_number(params: np.ndarray) -> float:
-    """
-    估计基本再生数R0
-    
-    R0 = beta / gamma
-    
+def weekly_aggregate(daily: np.ndarray, period: int = 7) -> np.ndarray:
+    """日度序列按 period 天求和聚合（末尾不足整周截断）。"""
+    n = (len(daily) // period) * period
+    return daily[:n].reshape(-1, period).sum(axis=1)
+
+
+def grid_calibrate(data_weekly: np.ndarray, population: int,
+                   beta_grid=None, sigma_grid=None, gamma_grid=None,
+                   alpha_grid=None, i0_grid=None) -> pd.DataFrame:
+    """替代系统上的网格搜索。
+
     Args:
-        params: 参数向量 [beta_base, sigma, gamma, media_amplification]
-    
+        data_weekly: 周报告病例数组
+        population: 总人口（蚊子种群按 MOSQUITO_PER_HUMAN 比例缩放）
+        各网格：β（日传播率）、σ（潜伏期倒数/日）、γ（恢复率倒数/日）、
+                α（媒体放大系数）、I0（初始感染数）
+        报告率 ρ 对每个组合用最小二乘闭式解：ρ* = <model, data> / <model, model>
+
     Returns:
-        R0值
+        按校准 RMSE 升序的 DataFrame（含 r2、rho、R0 等）
     """
-    beta_base = params[0]
-    gamma = params[2]
-    R0 = beta_base / gamma
-    return R0
+    beta_grid = beta_grid or [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+    sigma_grid = sigma_grid or [0.1, 0.2, 0.3]
+    gamma_grid = gamma_grid or [0.05, 0.1, 0.15, 0.2]
+    alpha_grid = alpha_grid or [0.5, 1.0, 2.0]
+    i0_grid = i0_grid or [1e5, 5e5, 2e6]
+
+    num_days = len(data_weekly) * 7
+    data = np.asarray(data_weekly, float)
+    d_dot_d = float(data @ data)
+    d_mean = data.mean()
+    ss_tot = float(((data - d_mean) ** 2).sum())
+
+    rows = []
+    for beta in beta_grid:
+        for sigma in sigma_grid:
+            for gamma in gamma_grid:
+                for alpha in alpha_grid:
+                    for i0 in i0_grid:
+                        sim = DeterministicSurrogate(
+                            population,
+                            SEIRParams(beta_base=beta, sigma=sigma, gamma=gamma),
+                            media_amplification=alpha,
+                        ).run(num_days, i0=int(i0), e0=int(i0))
+                        model_weekly = weekly_aggregate(sim['incidence'])
+                        m_dot_m = float(model_weekly @ model_weekly)
+                        if m_dot_m <= 0:
+                            continue
+                        rho = float(model_weekly @ data) / m_dot_m
+                        if not (0.0 < rho <= 1.0):
+                            continue  # 报告率必须落在 (0,1]
+                        fitted = rho * model_weekly
+                        rmse = float(np.sqrt(((fitted - data) ** 2).mean()))
+                        ss_res = float(((fitted - data) ** 2).sum())
+                        r2 = 1 - ss_res / ss_tot if ss_tot > 0 else np.nan
+                        rows.append({
+                            'beta': beta, 'sigma': sigma, 'gamma': gamma,
+                            'media_amp': alpha, 'i0': i0, 'rho': rho,
+                            'rmse': rmse, 'r2': r2, 'R0_human': beta / gamma,
+                        })
+    return pd.DataFrame(rows).sort_values('rmse').reset_index(drop=True)
 
 
-if __name__ == "__main__":
-    # 测试校准器
-    from src.data_loader import create_synthetic_dengue_data
-    
-    print("生成合成数据用于测试校准...")
-    synthetic_data = create_synthetic_dengue_data(num_days=365)
-    
-    calibrator = ModelCalibrator(synthetic_data, population=1000000)
-    
-    # 校准
-    optimal_params, min_error = calibrator.calibrate()
-    
-    # 验证
-    validation_results = calibrator.validate(optimal_params)
-    
-    # 计算R0
-    R0 = estimate_basic_reproduction_number(optimal_params)
-    print(f"\n基本再生数 R0: {R0:.2f}")
+def estimate_basic_reproduction_number(params: dict) -> float:
+    """人类通道的基本再生数 R0 = beta / gamma（蚊媒通道未计入，见论文说明）。"""
+    return params['beta'] / params['gamma']
