@@ -118,10 +118,6 @@ Brewer, N.T.; Chapman, G.B.; Gibbons, F.X.; Gerrard, M.; McCaul, K.D.;
 Ferrer, R.; Klein, W. Risk perceptions and health behavior, \emph{Current
   Opinion in Psychology}  \textbf{2015}, \emph{5}, 85--89.
 
-\bibitem{opendengue2024}
-{The OpenDengue Project}. {OpenDengue} national-level dengue case data extract
-  v1.3, \url{https://opendengue.org/data.html}, 2024.
-
 \bibitem{diekmann1990definition}
 Diekmann, O.; Heesterbeek, J.A.P.; Metz, J.A.J. On the definition and the
   computation of the basic reproduction ratio {$R_0$} in models for infectious
@@ -132,5 +128,9 @@ Diekmann, O.; Heesterbeek, J.A.P.; Metz, J.A.J. On the definition and the
 van~den Driessche, P.; Watmough, J. Reproduction numbers and sub-threshold
   endemic equilibria for compartmental models of disease transmission,
   \emph{Mathematical Biosciences}  \textbf{2002}, \emph{180}~(1-2), 29--48.
+
+\bibitem{opendengue2024}
+{The OpenDengue Project}. {OpenDengue} national-level dengue case data extract
+  v1.3, \url{https://opendengue.org/data.html}, 2024.
 
 \end{thebibliography}
