@@ -32,7 +32,7 @@ MANUSCRIPT = os.path.join(REPO, 'Journal of Simulation', 'submission', 'manuscri
 MANIFEST = os.path.join(REPO, 'results', 'RUN_MANIFEST.yml')
 
 EXPECTED_EXPERIMENTS = ['exp01', 'exp02', 'exp03', 'exp04', 'exp05', 'exp06',
-                        'exp07', 'exp08', 'exp09', 'exp10', 'ablation']
+                        'exp07', 'exp08', 'exp09', 'exp10', 'exp11', 'ablation']
 
 failures = []
 warnings = []
@@ -148,6 +148,15 @@ def main():
           and abs(ou.protection_min.mean() - 0.321) < 0.001
           and abs(ou.protection_max.mean() - 0.370) < 0.001
           and in_docs('0.321') and in_docs('0.370') and in_docs('0.497'))
+
+    e11 = pd.read_csv(os.path.join(REPO, 'results/exp11_growth_validation.csv')).iloc[0]
+    check('理论验证：R0=3.16 / lambda=1.104 vs 仿真 1.0875（偏差 1.5%）/ P†=0.804 / 带界 0.094',
+          abs(e11.r0_closed - 3.1595) < 0.001
+          and abs(e11.lambda_max_theory - 1.1040) < 0.001
+          and abs(e11.sim_growth_mean - 1.0875) < 0.001
+          and abs(e11.rel_deviation_pct - 1.5) < 0.05
+          and abs(e11.invasion_blocking_protection - 0.804) < 0.001
+          and in_docs('3.16') and in_docs('0.804') and in_docs('0.094'))
 
     e1 = pd.read_csv(os.path.join(REPO, 'results/exp01_summary.csv'), index_col=0)
     delay = e1.loc['with_feedback', 'peak_day_mean'] - e1.loc['without_feedback', 'peak_day_mean']

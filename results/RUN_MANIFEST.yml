@@ -293,3 +293,28 @@
     - ablation_attribution.csv
     - ablation_attribution_report.md
     - ablation_attribution.png
+- experiment: exp11
+  description: 理论验证：双通道入侵阈值与早期增长率
+  run_at: 2026-10-03T16:47:18
+  code_version: af66f8e4dd0368c784e52b8066546a2f015993b7
+  base_seed: 1313
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs: 20
+  fit_window: day 5-35
+  mosquito: on
+  lambda_max: 1.1039922158657633
+  sim_growth: 1.0875
+  rel_deviation_pct: 1.49
+  r0: 3.1595
+  invasion_blocking_protection: 0.804
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp11_growth_validation.csv

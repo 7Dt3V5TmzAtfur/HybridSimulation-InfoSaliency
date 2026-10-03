@@ -12,9 +12,16 @@
 
 \usepackage{epstopdf}
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
 
 \usepackage[numbers,sort&compress,merge]{natbib}
 \bibpunct[, ]{(}{)}{,}{n}{,}{,}
@@ -42,7 +49,7 @@
 \maketitle
 
 \begin{abstract}
-Behaviour-coupled epidemic models are usually evaluated by comparing simulations with and without an endogenous behavioural feedback, which confounds the contribution of protective-behaviour level with that of its dynamics. We built a four-layer hybrid simulation framework for dengue---agent-based individuals, system-dynamics transmission, discrete-event hospital resources, and explicit mosquito dynamics, both transmission channels modulated by population protection---and evaluated it with an effect-decomposition design: a constant-protection control arm, a mechanism control replacing the saliency-driven module with a prevalence-tracking awareness-diffusion module at matched protection, paired-seed ablation, calibration on Brazilian surveillance data with transfer tests, and a population-scale replication. The behavioural feedback flattened the epidemic (peak reduction 35.9\% at $N{=}1{,}000$; 24.8\% at $N{=}10{,}000$), but constant protection reproduced 95\% (85\% at scale) of the effect; the saliency-driven dynamics added a small, non-significant margin (3.2 percentage points). At matched protection, the awareness-diffusion control extracted a significant dynamic margin of 22.5 percentage points, locating the limitation in the saturating response function of the saliency channel rather than in behavioural dynamics per se. Calibration reached $R^2=0.941$ on Brazilian 2019 weekly data and transferred to large epidemic seasons but not to small years. The decomposition design is offered as a diagnostic standard for behaviour-coupled models.
+Behaviour-coupled epidemic models are usually evaluated by comparing simulations with and without an endogenous behavioural feedback, which confounds the contributions of protective-behaviour level and dynamics. We built a four-layer hybrid simulation framework for dengue---agent-based individuals, system-dynamics transmission, discrete-event hospital resources, and explicit mosquito dynamics, both channels modulated by population protection---and evaluated it with an effect-decomposition design: a constant-protection control arm, a mechanism control swapping the saliency module for a prevalence-tracking awareness module at matched protection, paired-seed ablation, calibration with transfer tests on Brazilian surveillance data, and a scale replication. The behavioural feedback flattened the epidemic (peak reduction 35.9\% at $N{=}1{,}000$; 24.8\% at $N{=}10{,}000$), but constant protection reproduced 95\% (85\% at scale) of it; the saliency-driven dynamics added a small, non-significant margin (3.2 points). At matched protection, the awareness control extracted a significant dynamic margin of 22.5 percentage points. Analytically, a two-channel invasion threshold ($R_0{=}3.16$) shows the information channel cannot block invasion, and a midpoint-invariant protection-band bound explains why its dynamics are structurally narrow while the awareness module's are not. Calibration reached $R^2=0.941$ and transferred to large epidemic seasons only. The decomposition design is offered as a diagnostic standard for such models.
 \end{abstract}
 
 \begin{keywords}
@@ -67,11 +74,13 @@ The paper's findings are deliberately reported with their boundaries. The feedba
 
 \subsection{Epidemic simulation paradigms and hybrids}
 
-Compartmental models remain the analytic backbone of epidemic modelling, but their homogeneous-mixing assumption limits behavioural realism. Agent-based models recover heterogeneity and behavioural decision-making; landmark applications include city-scale network simulations of smallpox \cite{eubank2004modelling} and the COVID-19 non-pharmaceutical-intervention studies \cite{ferguson2020impact,prem2020effect,chinazzi2020effect}, at the cost of computational expense and calibration difficulty. SD models occupy the opposite corner: tractable and policy-oriented \cite{sterman2000business}, with a mature validation methodology \cite{barlas1996formal}, but equally homogeneous. Hybrid simulation mixes paradigms within one model. Borshchev and Filippov \cite{borshchev2004system} systematised the motivations and techniques for combining SD, DES, and ABM; Morgan et al.\ \cite{morgan2017toolkit} provided a toolkit of DES--SD mixing designs grounded in practice. In health care, the systematic review of Kar et al.\ \cite{kar2025hybrid} found DES--SD to be the dominant combination, with the full ABM--DES--SD combination rare and concentrated on hospital operations and patient flow. Applications coupling a hybrid model to disease transmission, vector dynamics, and information-driven behaviour have, to our knowledge, not been reported; dengue adds the specific requirement of an explicit vector layer \cite{esteva1998analysis}.
+Compartmental models remain the analytic backbone of epidemic modelling, but their homogeneous-mixing assumption limits behavioural realism. Agent-based models recover heterogeneity and behavioural decision-making; landmark applications include city-scale network simulations of smallpox \cite{eubank2004modelling} and the COVID-19 non-pharmaceutical-intervention studies \cite{ferguson2020impact,prem2020effect,chinazzi2020effect}, at the cost of computational expense and calibration difficulty. SD models occupy the opposite corner: tractable and policy-oriented \cite{sterman2000business}, with a mature validation methodology \cite{barlas1996formal}, but equally homogeneous.
+
+Hybrid simulation mixes paradigms within one model, and the community has developed both the motivation and the design vocabulary for doing so. Borshchev and Filippov \cite{borshchev2004system} systematised why modellers move between SD, DES, and ABM within a single study---different abstraction levels answer different questions---and demonstrated practical coupling techniques. Morgan et al.\ \cite{morgan2017toolkit} turned mixed DES--SD practice into a toolkit of named designs with explicit assessment of opportunities and risks, providing the methodological vocabulary this paper borrows when it describes its layers and their coupling direction. In health care specifically, the systematic review of Kar et al.\ \cite{kar2025hybrid} found DES--SD to be the dominant combination, the full ABM--DES--SD combination rare, and existing applications concentrated on hospital operations and patient flow rather than on coupling to disease transmission and information-driven behaviour. Applications coupling a hybrid model to disease transmission, vector dynamics, and information-driven behaviour have, to our knowledge, not been reported; dengue adds the specific requirement of an explicit vector layer \cite{esteva1998analysis}, which is absent from the hybrid-simulation portfolio the review covers.
 
 \subsection{Behaviour, information, and epidemics}
 
-That information changes epidemics is well established. Funk et al.\ \cite{funk2009spread} coupled awareness spread to transmission and showed that awareness can reduce outbreak sizes; their review \cite{funk2010modelling} consolidated the modelling approaches, and the subsequent systematic review of Verelst et al.\ \cite{verelst2016behavioural} catalogued the 2010--2015 generation of behavioural-change models. Bedson et al.\ \cite{bedson2021review} set an agenda for integrated disease models that include social and behavioural factors, noting that such integration remains the exception in practice. Centola \cite{centola2010spread} and Bakshy et al.\ \cite{bakshy2012role} established the empirical mechanics of behaviour and information diffusion in networks, and Perra et al.\ \cite{perra2012activity} formalised adaptive behaviour--transmission coupling on time-varying networks. On the psychological side, risk perception is a reliable but moderate predictor of protective behaviour \cite{rosenstock1974historical,rogers1975protection,ajzen1991theory,brewer2007meta,ferrer2015risk}. Fenichel et al.\ \cite{fenichel2011adaptive} demonstrated theoretically that adaptive behaviour changes epidemic outcomes relative to static baselines---the closest methodological antecedent of our study, though without a simulation framework or an experimental decomposition.
+That information changes epidemics is well established. Funk et al.\ \cite{funk2009spread} coupled awareness spread to transmission and showed that awareness can reduce outbreak sizes; their review \cite{funk2010modelling} consolidated the modelling approaches, and the subsequent systematic review of Verelst et al.\ \cite{verelst2016behavioural} catalogued the 2010--2015 generation of behavioural-change models, noting that most couple behaviour to transmission through a reduced-susceptibility or reduced-contact channel driven by prevalence---the same structural slot our saliency channel occupies. Bedson et al.\ \cite{bedson2021review} set an agenda for integrated disease models that include social and behavioural factors and observed that such integration remains the exception in practice, particularly for vector-borne disease. Centola \cite{centola2010spread} and Bakshy et al.\ \cite{bakshy2012role} established the empirical mechanics of behaviour and information diffusion in networks, and Perra et al.\ \cite{perra2012activity} formalised adaptive behaviour--transmission coupling on time-varying networks, where behavioural adaptation alters epidemic thresholds and final sizes. On the psychological side, risk perception is a reliable but moderate predictor of protective behaviour \cite{rosenstock1974historical,rogers1975protection,ajzen1991theory,brewer2007meta,ferrer2015risk}---an effect size our behaviour model deliberately reflects by producing moderate protection levels rather than on-off adoption. Fenichel et al.\ \cite{fenichel2011adaptive} demonstrated theoretically that adaptive behaviour changes epidemic outcomes relative to static baselines---the closest methodological antecedent of our study, though without a simulation framework or an experimental decomposition; our mechanism control operationalises exactly the contrast they analyse.
 
 \subsection{Positioning}
 
@@ -128,7 +137,30 @@ We retain the human-to-human term as a deliberate simplification standing in for
 
 \subsection{Hospital resources and accounting}
 
-The DES layer manages ordinary beds (200), ICU beds (50), and testing capacity (100/day) with 7-day and 14-day stays. Admission requests arrive with daily probability 0.15 per infectious agent (20\% severe); patients who cannot be admitted immediately queue and are admitted when resources free up, and counted exactly once as \emph{deferred admissions}; agents who recover while queued leave the queue. In the present design admission does not isolate infectious agents, so resource constraints do not feed back into transmission; Section 4.6 quantifies this boundary explicitly, and coupling admission to transmissibility is future work.
+The DES layer manages ordinary beds (200), ICU beds (50), and testing capacity (100/day) with 7-day and 14-day stays. Admission requests arrive with daily probability 0.15 per infectious agent (20\% severe); patients who cannot be admitted immediately queue and are admitted when resources free up, and counted exactly once as \emph{deferred admissions}; agents who recover while queued leave the queue. In the present design admission does not isolate infectious agents, so resource constraints do not feed back into transmission; Section 4.6 quantifies this boundary explicitly, and coupling admission to transmissibility is future work. Algorithm~\ref{alg:daily} summarises the daily cycle.
+
+\begin{algorithm}[htb]
+\caption{Daily simulation step of the hybrid model}
+\label{alg:daily}
+\begin{algorithmic}[1]
+\State aggregate agent states $(S,E,I,R)$; compute $S(t)$ by Eq.~(\ref{eq:saliency})
+\ForAll{agents} \Comment{behaviour layer}
+  \State update $R_i \leftarrow (1-\eta)\,R_{\mathrm{target}} + \eta\,R_i$; $P_i \leftarrow \sigma(\kappa(R_i - \mu))$
+\EndFor
+\State $\bar{P} \leftarrow \mathrm{mean}_i\, P_i$ \Comment{or fixed to $P^{*}$ in the constant-protection arm}
+\State update mosquitoes: $E_m, I_m$ by the difference system; $\mathrm{risk}_m \leftarrow b\,p_{mh}\,(I_m/M)$
+\State $\beta_{\mathrm{eff}} \leftarrow \beta(1-\varepsilon \bar{P})$; hazard $h \leftarrow \min(1, \beta_{\mathrm{eff}} I/N + \mathrm{risk}_m (1-\varepsilon\bar{P}))$
+\ForAll{susceptible agents} \Comment{transmission layer}
+  \State infect with probability $h$ (state $S \to E$)
+\EndFor
+\ForAll{exposed agents} $E \to I$ with probability $\sigma$;\quad \textbf{for all} infectious agents: $I \to R$ with probability $\gamma$
+\EndFor
+\ForAll{infectious agents} \Comment{DES layer}
+  \State request test w.p.\ $d$; request admission w.p.\ $h_{\mathrm{adm}}$ (20\% ICU); queue and count deferred if full
+\EndFor
+\State process discharge events and admission queues; record metrics
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Study design}
 
@@ -156,6 +188,57 @@ Robustness & Awareness-parameter grid ($3\times3$) and response-shape sweep ($5\
 \end{table}
 
 Three elements deserve specification. First, the \emph{constant-protection arm} fixes the population mean protection at $P^{*}$, the time-averaged protection of the full model under identical seeds---an internally consistent target that introduces no free parameter---while agents' behaviour no longer updates. The dynamic margin of the information channel is the difference between the full model and this arm. Second, the \emph{mechanism control} replaces the saliency--sigmoid module with an awareness-diffusion module of the kind used in the awareness--epidemic literature (a representative implementation, not a reproduction of any specific published model): an awareness fraction $A(t)$ updates by contact contagion, prevalence-driven onset, and forgetting, $A(t{+}1)=\mathrm{clip}\big(A + p_A A\,S/N + q\,I/N - d_A A\big)$ with $p_A{=}0.25$, $q{=}0.8$, $d_A{=}0.1$, and protection $P(t)=mA(t)$ with the same $\varepsilon$-modulation. The multiplier $m$ is calibrated by bisection so that the dynamic arm's time-averaged protection matches the target within 0.004 ($m^{*}{=}0.497$), making the comparison fair at matched mean protection. Third, \emph{calibration} runs on a deterministic surrogate whose expectation dynamics are isomorphic to the agent model (the same transitions, mosquito difference equations, information--behaviour equations, and per-step Bernoulli hazard), because gradient-based optimisation on a stochastic objective is unsound. The surrogate is grid-searched over $(\beta,\sigma,\gamma,\alpha,I_0)$ against Brazil 2019 weekly reported cases (OpenDengue national extract, ``Total'' case definition, 52 weeks; population $2.11\times 10^{8}$, mosquito ratio preserved), with the reporting fraction $\rho$ solved per grid point in closed form by least squares. The fitted parameters are then verified in the agent model, and frozen-parameter transfer is tested on the 2016--2023 seasons (2020 missing from the extract), strictly with $I_0$ frozen and loosely with per-season $I_0$ reselected from the calibration grid.
+
+\subsection{Theoretical analysis}
+
+Three analytical results explain the empirical findings that follow; proofs are in Appendix~B and the invasion threshold is validated numerically against the agent model (Table~\ref{tab:theory}).
+
+\begin{lemma}[Risk envelope]\label{lem:envelope}
+With nonnegative weights, the population mean risk satisfies $0 \le \bar{R}(t) \le \bar{R}_{\max}$, where $\bar{R}_{\max} = \max_t \big[(w_{\mathrm{info}}\alpha + w_{\mathrm{soc}})\,\tfrac{I(t)}{N} + w_{\mathrm{pers}}\tfrac{E(t)+I(t)}{N}\big]$.
+\end{lemma}
+
+\begin{proposition}[Two-channel invasion threshold]\label{prop:threshold}
+At the disease-free state with constant mean protection $\bar{P}$, the expected system has reproduction number
+\begin{equation}
+R_{\mathrm{eff}}(\bar{P}) = (1-\varepsilon \bar{P}) \cdot \frac{K_h + \sqrt{K_h^2 + 4\,K_{hv} K_{vh}}}{2},
+\label{eq:reff}
+\end{equation}
+with $K_h = \beta_{\mathrm{base}}/\gamma$ (direct channel), $K_{hv} = b\,p_{hm}\,\tfrac{N}{M}\big/\gamma$ (human-to-mosquito per generation) and $K_{vh} = b\,p_{mh}\,L$ (mosquito-to-human per generation). With the paper's parameters, $R_0 = 3.16$ ($K_h{=}3.00$, $K_{hv}{=}0.300$, $K_{vh}{=}1.68$) versus $3.00$ for the human channel alone, and the early growth factor implied by the linearised system ($\lambda_{\max} = 1.104$ per day) agrees with the simulated early growth of the zero-protection agent model ($1.088 \pm 0.008$ over 20 replicates; 1.5\% relative deviation).
+\end{proposition}
+
+\begin{corollary}[Invasion-blocking protection]\label{cor:block}
+$R_{\mathrm{eff}}(\bar{P}) \le 1$ requires $\bar{P} \ge \bar{P}^{\dagger} = (1-1/R_0)/\varepsilon = 0.804$ --- far above the protection band the information channel can reach (Lemma~\ref{lem:envelope}, Proposition~\ref{prop:band}). Endogenous information-driven protection therefore cannot prevent invasion in this parameterisation, whatever its dynamics; it can only flatten the wave.
+\end{corollary}
+
+\begin{proposition}[Protection-band bound and midpoint invariance]\label{prop:band}
+For any trajectory, the population protection lies in $[\sigma(-\kappa\mu),\; \sigma(\kappa(\bar{R}_{\max}-\mu))]$, and its width is at most $\tanh(\kappa \bar{R}_{\max}/4)$, the supremum of $\sigma(x+\Delta)-\sigma(x)$ over $x$ for a logit range $\Delta = \kappa\bar{R}_{\max}$. The logit width $\kappa\bar{R}_{\max}$ is \emph{independent of the midpoint} $\mu$: moving $\mu$ translates the band without widening it.
+\end{proposition}
+
+Three consequences map directly onto the experiments. First, with $\kappa{=}1.5$ and the observed prevalence envelope, the bound is $0.094$ while the measured protection band is $0.049$ wide ($0.321$--$0.370$): the saliency channel cannot vary protection by more than a few percentage points in a single wave. Second, the $\mu$-invariance explains why the response-shape sweep (Section 4.3) leaves the dynamic margin essentially unchanged---an analytic property, not a coincidence of the default midpoint. Third, the awareness module escapes Proposition~\ref{prop:band} because its contact-contagion dynamics are not bounded by the risk envelope: its protection amplitude (0.49) exceeds the saliency bound five-fold, which is why it produces a significant dynamic margin at matched mean protection. Finally, since the reachable band tops out at $0.41$--$0.46 \ll \bar{P}^{\dagger}$, Corollary~\ref{cor:block} predicts that total infections are structurally insensitive to information-driven protection---precisely the attack-rate saturation observed at scale (Section 4.2).
+
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{lc}
+\hline
+\textbf{Quantity} & \textbf{Value} \\
+\hline
+$K_h = \beta/\gamma$ (direct channel) & 3.00 \\
+$K_{hv} = b\,p_{hm}(N/M)/\gamma$ & 0.300 \\
+$K_{vh} = b\,p_{mh}\,L$ & 1.68 \\
+$R_0$, two channels (Eq.~\ref{eq:reff}, $\bar{P}{=}0$) & 3.16 \\
+$R_0$, human channel only & 3.00 \\
+$\lambda_{\max}$, linearised daily system & 1.104 /day \\
+Simulated early growth factor (20 replicates) & $1.088 \pm 0.008$ \\
+Invasion-blocking protection $\bar{P}^{\dagger}$ & 0.804 \\
+Protection-band bound $\tanh(\kappa \bar{R}_{\max}/4)$ & 0.094 \\
+Measured protection band (full model) & 0.049 (0.321--0.370) \\
+Awareness-module protection amplitude & 0.49 (0.004--0.497) \\
+\hline
+\end{tabular}
+\caption{Theoretical quantities and their numerical validation (Propositions~\ref{prop:threshold} and \ref{prop:band}; validation experiment in the run manifest).}
+\label{tab:theory}
+\end{table}
 
 \section{Results}
 
@@ -245,17 +328,105 @@ Saliency--sigmoid (ours) & Zero protection & $218.7 \pm 18.5$ & --- & --- \\
 
 The difference is the time shape of protection. The awareness module's $A(t)$ is prevalence-driven: protection rises from zero exactly as the epidemic gathers force and reaches $\bar{A}\approx0.68$ at peak, concentrating suppression where transmission is strongest. Our saliency channel, locked on the saturated shoulder of its sigmoid, produces near-flat protection throughout. The negative result and the positive control together constitute a diagnosis: the limitation of the present framework is the response-function shape, not behavioural dynamics as such.
 
-Two robustness checks close the remaining inferential gaps. First, the awareness-control conclusion is not an artefact of one parameterisation: re-running the matched comparison over a $3\times3$ grid of the awareness parameters ($p_A \in \{0.15, 0.25, 0.35\}$, $d_A \in \{0.05, 0.1, 0.2\}$, $q$ fixed at 0.8, $m^{*}$ recalibrated per cell), the dynamic margin is positive in 8 of 9 configurations and significant in 7, ranging from +18.7 to +48.2 percentage points. The single exception ($p_A{=}0.35$, $d_A{=}0.05$) is the high-contact, slow-forgetting corner in which awareness persists near saturation, so constant protection at the matched level performs equivalently to the dynamic arm. Second, the saliency channel's small margin is not an artefact of the default midpoint: sweeping the sigmoid midpoint $\mu \in [0.3, 0.7]$ (step 0.1) and slope $\kappa \in \{1.5, 3.0\}$ (10 replicates per cell, matched-constant control per cell; the zero-protection arm is shared across cells, since with behaviour disabled the runs do not depend on the shape parameters), the dynamic margin stays between 1.3 and 5.9 percentage points and never reaches significance at any shape, although the mean protection $P^{*}$ varies from 0.126 to 0.405 across the grid. The amplitude difference is visible directly in the protection paths: over the whole epidemic, the saliency channel's population protection moves within a band of width only 0.05 (0.321 to 0.370), whereas the awareness module's sweeps 0.49 (0.004 to 0.497). The saliency-to-protection mapping compresses the dynamics into a narrow band at every tested shape; the awareness module's prevalence-tracking dynamics have both the amplitude and the timing that the saliency channel lacks.
+Two robustness checks close the remaining inferential gaps. First, the awareness-control conclusion is not an artefact of one parameterisation: re-running the matched comparison over a $3\times3$ grid of the awareness parameters ($p_A \in \{0.15, 0.25, 0.35\}$, $d_A \in \{0.05, 0.1, 0.2\}$, $q$ fixed at 0.8, $m^{*}$ recalibrated per cell), the dynamic margin is positive in 8 of 9 configurations and significant in 7, ranging from +18.7 to +48.2 percentage points (Table~\ref{tab:awaresens}). The single exception ($p_A{=}0.35$, $d_A{=}0.05$) is the high-contact, slow-forgetting corner in which awareness persists near saturation, so constant protection at the matched level performs equivalently to the dynamic arm. Second, the saliency channel's small margin is not an artefact of the default midpoint: sweeping the sigmoid midpoint $\mu \in [0.3, 0.7]$ (step 0.1) and slope $\kappa \in \{1.5, 3.0\}$ (10 replicates per cell, matched-constant control per cell; the zero-protection arm is shared across cells, since with behaviour disabled the runs do not depend on the shape parameters), the dynamic margin stays between 1.3 and 5.9 percentage points and never reaches significance at any shape, although the mean protection $P^{*}$ varies from 0.126 to 0.405 across the grid (Table~\ref{tab:shape}). The amplitude difference is visible directly in the protection paths: over the whole epidemic, the saliency channel's population protection moves within a band of width only 0.05 (0.321 to 0.370), whereas the awareness module's sweeps 0.49 (0.004 to 0.497). The saliency-to-protection mapping compresses the dynamics into a narrow band at every tested shape; the awareness module's prevalence-tracking dynamics have both the amplitude and the timing that the saliency channel lacks.
+
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{lccc}
+\hline
+$p_A \backslash d_A$ & 0.05 & 0.10 & 0.20 \\
+\hline
+0.15 & +18.7 pp$^{*}$ & +35.7 pp$^{*}$ & +40.0 pp$^{*}$ \\
+0.25 & +3.9 pp (n.s.) & +28.2 pp$^{*}$ & +48.2 pp$^{*}$ \\
+0.35 & $-0.8$ pp (n.s.) & +23.6 pp$^{*}$ & +41.5 pp$^{*}$ \\
+\hline
+\end{tabular}
+\caption{Dynamic margin of the awareness module across its parameter grid ($m^{*}$ recalibrated per cell; $^{*}$ significant at $p<0.05$, Welch $t$, 5 replicates per arm).}
+\label{tab:awaresens}
+\end{table}
+
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{lcccc}
+\hline
+ & $\mu{=}0.3$ & $\mu{=}0.4$ & $\mu{=}0.5$ & $\mu{=}0.6$ \\
+\hline
+$\kappa{=}1.5$: $P^{*}$ / margin (pp) & 0.405 / +4.2 & 0.370 / +4.1 & 0.336 / +3.4 & 0.304 / +1.3 \\
+$\kappa{=}3.0$: $P^{*}$ / margin (pp) & 0.319 / +4.6 & 0.258 / +5.9 & 0.206 / +3.8 & 0.161 / +1.6 \\
+\hline
+\end{tabular}
+\caption{Response-shape sweep: mean protection $P^{*}$ and the saliency channel's dynamic margin (all non-significant, $p \ge 0.18$); $\mu{=}0.7$ cells are omitted here and reported in the archived outputs ($P^{*}{=}0.273/0.126$; margins $+2.6$/$+2.3$ pp).}
+\label{tab:shape}
+\end{table}
 
 \subsection{Media amplification and the 20\% target (RQ4)}
 
-Across $\alpha \in \{0.5,\dots,5\}$ (10 replicates per group), peak reductions relative to $\alpha{=}0.5$ stay modest---9.6\% at $\alpha{=}1.0$, 4.9\% at $\alpha{=}1.5$ (within-noise non-monotonicity), 10.5\% at $\alpha{=}3.0$, 20.0\% at $\alpha{=}5.0$---while maximum protection rises monotonically from 0.357 to 0.458. A threshold search over $\alpha \in [0.5, 10]$ (step 0.5, 5 replicates per point) finds the pre-specified target of a 20\% peak reduction first met at $\alpha{=}5.0$ (21.9\%), reaching at most 30.4\% at $\alpha{=}10$. The target was fixed before the sensitivity study in the project's research protocol; operationally, a 20\% peak reduction corresponds to roughly a fifth of peak-day admission and testing demand---the scale at which bed-capacity decisions become material. Since $\alpha{=}5$ denotes ten-fold amplification relative to the reference, the practical reading is that intensifying media amplification alone is a low-leverage instrument in this parameterisation; protection rising 28\% translates into at most a 20\% peak reduction.
+Across $\alpha \in \{0.5,\dots,5\}$ (10 replicates per group), peak reductions relative to $\alpha{=}0.5$ stay modest (Table~\ref{tab:alpha}), while maximum protection rises monotonically from 0.357 to 0.458. A threshold search over $\alpha \in [0.5, 10]$ (step 0.5, 5 replicates per point) finds the pre-specified target of a 20\% peak reduction first met at $\alpha{=}5.0$ (21.9\%), reaching at most 30.4\% at $\alpha{=}10$. The target was fixed before the sensitivity study in the project's research protocol; operationally, a 20\% peak reduction corresponds to roughly a fifth of peak-day admission and testing demand---the scale at which bed-capacity decisions become material. Since $\alpha{=}5$ denotes ten-fold amplification relative to the reference, the practical reading is that intensifying media amplification alone is a low-leverage instrument in this parameterisation; protection rising 28\% translates into at most a 20\% peak reduction.
 
-A complementary sweep of the behavioural parameters (10 replicates per cell against a zero-protection reference on the same seed set) shows that the switch effect is robust to the response sensitivity and inertia at flattest responses ($\kappa{=}0.5$: 46.5--47.8\%; $\kappa{=}1.0$: 40.0--40.9\% across $\eta \in \{0, 0.15, 0.3, 0.5\}$), decays for steeper responses ($\kappa{=}1.5$: 31.5--35.2\%; $\kappa{=}2$: 25--29\%; $\kappa{=}3$: 19--21\%), and is nearly insensitive to inertia (at most 3.7 percentage points within any $\kappa$ row). The mechanism mirrors the decomposition: a steeper sigmoid lowers the low-risk baseline protection, which---not the information dynamics---is what carries the effect.
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{lccccc}
+\hline
+$\alpha$ & \textbf{Peak} & \textbf{Peak reduction} & \textbf{Total} & \textbf{Peak day} & \textbf{Max protection} \\
+\hline
+0.5 & $150.0 \pm 17.3$ & 0.0\% (ref.) & $885.4 \pm 18.6$ & 65.7 & 0.357 \\
+1.0 & $135.6 \pm 16.4$ & 9.60\% & $875.3 \pm 16.3$ & 66.2 & 0.367 \\
+1.5 & $142.7 \pm 10.8$ & 4.87\% & $872.4 \pm 12.6$ & 65.0 & 0.383 \\
+2.0 & $138.1 \pm 19.5$ & 7.93\% & $873.7 \pm 23.0$ & 66.6 & 0.394 \\
+3.0 & $134.2 \pm 10.7$ & 10.53\% & $865.0 \pm 17.5$ & 66.7 & 0.419 \\
+5.0 & $120.0 \pm 13.3$ & \textbf{20.00\%} & $846.0 \pm 22.4$ & 66.2 & 0.458 \\
+\hline
+\end{tabular}
+\caption{Media-amplification sensitivity (10 replicates per group, mean $\pm$ s.d.; reference $\alpha{=}0.5$).}
+\label{tab:alpha}
+\end{table}
+
+A complementary sweep of the behavioural parameters (10 replicates per cell against a zero-protection reference on the same seed set; Table~\ref{tab:kappa}) shows that the switch effect is robust to the response sensitivity and inertia at flattest responses ($\kappa{=}0.5$: 46.5--47.8\%; $\kappa{=}1.0$: 40.0--40.9\% across $\eta \in \{0, 0.15, 0.3, 0.5\}$), decays for steeper responses ($\kappa{=}1.5$: 31.5--35.2\%; $\kappa{=}2$: 25--29\%; $\kappa{=}3$: 19--21\%), and is nearly insensitive to inertia (at most 3.7 percentage points within any $\kappa$ row). The mechanism mirrors the decomposition: a steeper sigmoid lowers the low-risk baseline protection, which---not the information dynamics---is what carries the effect.
+
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{lcccc}
+\hline
+$\kappa \backslash \eta$ & 0.00 & 0.15 & 0.30 & 0.50 \\
+\hline
+0.5 & 46.5 & 47.8 & 47.8 & 47.8 \\
+1.0 & 40.7 & 40.9 & 40.5 & 40.0 \\
+1.5 & 35.2 & 34.5 & 34.6 & 31.5 \\
+2.0 & 25.8 & 25.4 & 25.7 & 28.7 \\
+3.0 & 21.0 & 21.2 & 20.0 & 18.9 \\
+\hline
+\end{tabular}
+\caption{Peak reduction (\%) against a zero-protection reference, across response sensitivity $\kappa$ and behavioural inertia $\eta$ (10 replicates per cell).}
+\label{tab:kappa}
+\end{table}
 
 \subsection{Calibration and seasonal transfer (RQ5)}
 
-Grid search on the deterministic surrogate fits the Brazilian 2019 weekly series closely: $\beta{=}0.25$, $\sigma{=}0.1$, $\gamma{=}0.1$, $\alpha{=}1.0$, $I_0{=}5{\times}10^{5}$, with reporting fraction $\rho{=}0.0114$, RMSE 10{,}078 weekly cases, $R^{2}{=}0.941$, and human-channel $R_0{=}2.50$ (Figure~\ref{fig:calib}). One interpretive caveat must accompany these numbers: the fitted parameters calibrate the model \emph{as specified}---a system whose transmission is dominated by the direct human-to-human term (Section 4.6)---and should therefore be read as parameters of this model structure, not as dengue-specific biology. The fitted parameters reproduce the agent model faithfully (weekly-incidence correlation $r{=}0.967$; 96\% of weeks have an ABM mean incidence within the surrogate value $\pm$ 2 across-run standard deviations, with an additional 5\%-of-surrogate tolerance), so the surrogate is a valid fast stand-in. Three caveats are reported rather than smoothed over. First, $\sigma$ sits on the grid boundary (a 10-day incubation period, above the 4--7 days typical of dengue): without seasonal forcing, the model compensates with slower dynamics, and the fitted $\sigma$ must not be read biologically. Second, $\rho$ is a fitted effective reporting rate, not an independent measurement. Third, out-of-season transfer is bounded: freezing the dynamics and re-solving only $\rho$ yields $R^{2}=0.944$ (2022), $0.788$ (2023), $0.563$ (2021), and $0.117$ (2016), but fails in the small epidemic year 2017 ($-0.097$) and the atypical year 2018 ($-0.530$); allowing per-season $I_0$ rescues 2016 (0.868) but not 2017--2018. The calibration therefore transfers to seasons shaped like the training season and fails where the shape differs---the honest boundary of a seasonally unforced model.
+Grid search on the deterministic surrogate fits the Brazilian 2019 weekly series closely: $\beta{=}0.25$, $\sigma{=}0.1$, $\gamma{=}0.1$, $\alpha{=}1.0$, $I_0{=}5{\times}10^{5}$, with reporting fraction $\rho{=}0.0114$, RMSE 10{,}078 weekly cases, $R^{2}{=}0.941$, and human-channel $R_0{=}2.50$ (Figure~\ref{fig:calib}). One interpretive caveat must accompany these numbers: the fitted parameters calibrate the model \emph{as specified}---a system whose transmission is dominated by the direct human-to-human term (Section 4.6)---and should therefore be read as parameters of this model structure, not as dengue-specific biology. The fitted parameters reproduce the agent model faithfully (weekly-incidence correlation $r{=}0.967$; 96\% of weeks have an ABM mean incidence within the surrogate value $\pm$ 2 across-run standard deviations, with an additional 5\%-of-surrogate tolerance), so the surrogate is a valid fast stand-in. Three caveats are reported rather than smoothed over. First, $\sigma$ sits on the grid boundary (a 10-day incubation period, above the 4--7 days typical of dengue): without seasonal forcing, the model compensates with slower dynamics, and the fitted $\sigma$ must not be read biologically. Second, $\rho$ is a fitted effective reporting rate, not an independent measurement. Third, out-of-season transfer is bounded (Table~\ref{tab:seasons}): freezing the dynamics and re-solving only $\rho$ yields $R^{2}=0.944$ (2022), $0.788$ (2023), $0.563$ (2021), and $0.117$ (2016), but fails in the small epidemic year 2017 ($-0.097$) and the atypical year 2018 ($-0.530$); allowing per-season $I_0$ rescues 2016 (0.868) but not 2017--2018. The calibration therefore transfers to seasons shaped like the training season and fails where the shape differs---the honest boundary of a seasonally unforced model.
+
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{lccc}
+\hline
+\textbf{Season} & \textbf{Reported cases} & \textbf{Strict $R^2$ (frozen $I_0$)} & \textbf{Loose $R^2$ (per-season $I_0$)} \\
+\hline
+2016 & 2.22M & 0.117 & 0.868 \\
+2017 & 0.51M & $-0.097$ & 0.248 \\
+2018 & 0.47M & $-0.530$ & $-0.437$ \\
+\textbf{2019} & \textbf{2.25M} & \textbf{0.941} (in-sample) & 0.941 \\
+2021 & 0.98M & 0.563 & 0.563 \\
+2022 & 2.36M & 0.944 & 0.944 \\
+2023 & 3.15M & 0.788 & 0.788 \\
+\hline
+\end{tabular}
+\caption{Frozen-parameter transfer across Brazilian seasons (2020 missing from the extract).}
+\label{tab:seasons}
+\end{table}
 
 \begin{figure}[htb]
 \centering
@@ -307,7 +478,11 @@ The ablation quantifies an architectural property: hospital capacity does not in
 
 \subsection{Limitations}
 
+\subsection{Limitations and threats to validity}
+
 Five limitations bound the claims. First, the human-to-human transmission term is a simplification standing in for unmodelled pathways in a primarily vector-borne disease, and the ablation shows it currently carries almost all transmission (Section 4.6): a mosquito-only (Ross--Macdonald-style) parameterisation that can sustain transmission is the principled reformulation, and recalibrating the mosquito channel is the most consequential development task. Second, mixing is homogeneous: no spatial structure, contact networks, or individual heterogeneity in behaviour. Third, the behaviour module's sigmoid midpoint and slope are design choices, not calibrated quantities---and Section 4.3 shows the saliency mapping's narrow dynamic range persists across the tested shapes. Fourth, the saliency signal is a global scalar with uncalibrated media parameters; its decay is indexed to calendar time, which is valid only within a single wave. Fifth, individual-level validation stops at $N{=}10^{4}$, far below city or national scale, and the calibration covers one country and seven seasons. The awareness-diffusion control is a representative implementation of a mechanism class, not a reproduction of any specific published model; its conclusion is robust across the tested parameter grid, but its own parameters were not optimised.
+
+In threat-to-validity terms: \emph{construct} validity is limited by the parsimonious saliency proxy (no media data) and the global-scalars signal; \emph{internal} validity is protected by the seeded paired design and the consistency checker, with the residual threat that the awareness control's parameters, though swept, were not fitted to any empirical awareness process; \emph{external} validity is bounded by the single country, the seven seasons, the homogeneous mixing, and the $10^{3}$--$10^{4}$ population scale, with the scale replication indicating which conclusions are scale-sensitive (peak magnitudes) and which are not (the level-versus-dynamics ordering).
 
 \subsection{Future work}
 
@@ -338,6 +513,37 @@ The dengue surveillance data are publicly available from the OpenDengue project 
 \section{Regeneration protocol and consistency checking}
 
 Every experiment runs under a common protocol: independent seeds per replicate ($s = 1000\,b + i$, with per-experiment base seeds $b$), canonical result-file names, and an appended run manifest recording the code commit, seeds, protocol parameters, and dependency versions for each rerun. A consistency script re-derives the manuscript's key quantitative claims directly from the archived CSV outputs, checks manifest coverage and code-version anchoring, and is wired as a local pre-commit hook so that a commit whose numbers do not match the archived results is rejected. The results underlying this manuscript were generated in a single pass on the anchored code revision and verified byte-identical under a full seeded re-run. The two-stage submission artefacts (code commit, then re-run-anchored results commit) keep the paper, the results, and the code version in one verifiable chain.
+
+\section{Proofs}\label{app:proofs}
+
+\subsection*{Proof of Lemma~\ref{lem:envelope}}
+By definition, $\bar{R}(t) = w_{\mathrm{info}} S(t) + w_{\mathrm{soc}}\, I(t)/N + w_{\mathrm{pers}}\,(E(t)+I(t))/N$ averaged over agents, with all weights nonnegative. Since $S(t) = \min(1, (I(t)/N)\,\alpha\, e^{-\lambda t/100}) \le (I(t)/N)\,\alpha$ and $(E+I)/N \le 1$, each term is nonnegative and bounded by its share of $\bar{R}_{\max}$; summing gives the envelope. $\square$
+
+\subsection*{Proof of Proposition~\ref{prop:threshold}}
+Linearise the expected dynamics at the disease-free state $(s,e,i,r)=(1,0,0,0)$, $\bar{P}$ constant. With $\bar{P}$ constant, both transmission channels scale by the factor $(1-\varepsilon\bar{P})$: the direct channel through $\beta_{\mathrm{eff}}$, the mosquito channel through the modulation of the mosquito-induced hazard. The daily transition matrix of the linearised state $(e, i, m_e, m_i)$ (fractions of $N$ and $M$ respectively) is
+\[
+M = \begin{pmatrix}
+1-\sigma & (1-\varepsilon\bar{P})\beta & 0 & (1-\varepsilon\bar{P})\,b\,p_{mh}\\
+\sigma & 1-\gamma & 0 & 0\\
+0 & (1-\varepsilon\bar{P})\,b\,p_{hm}\tfrac{N}{M} & 1-\tfrac{1}{\mathrm{EIP}} & 0\\
+0 & 0 & \tfrac{1}{\mathrm{EIP}} & 1-\tfrac{1}{L}
+\end{pmatrix}.
+\]
+Split $M = F + T$ into the new-infection part $F$ (entries $F_{e i} = (1-\varepsilon\bar{P})\beta$, $F_{e m_i} = (1-\varepsilon\bar{P}) b p_{mh}$, $F_{m_e i} = (1-\varepsilon\bar{P}) b p_{hm} \tfrac{N}{M}$) and the transition part $T$. The next-generation matrix is $K = F(I-T)^{-1}$, whose nonzero block is
+\[
+K = \begin{pmatrix}
+(1-\varepsilon\bar{P})\tfrac{\beta}{\gamma} & (1-\varepsilon\bar{P})\, b\,p_{mh}\,L\\
+(1-\varepsilon\bar{P})\,\tfrac{b\,p_{hm}}{\gamma}\tfrac{N}{M} & 0
+\end{pmatrix},
+\]
+using $(I-T)^{-1}_{e i} = 1/\gamma$, $(I-T)^{-1}_{m_i m_i} = L$ (an infectious mosquito causes $b\,p_{mh}$ human exposures per day over its $L$-day life) and $(I-T)^{-1}_{m_e i} = 1/\gamma$. The spectral radius of the $2\times2$ block is
+\[
+R_{\mathrm{eff}}(\bar{P}) = (1-\varepsilon\bar{P})\,\frac{K_h + \sqrt{K_h^2 + 4K_{hv}K_{vh}}}{2},
+\]
+with $K_h = \beta/\gamma$, $K_{hv} = (b\,p_{hm}/\gamma)(N/M)$, $K_{vh} = b\,p_{mh}\,L$. Setting $\bar{P}=0$ gives Proposition~\ref{prop:threshold}; the invasion condition $R_{\mathrm{eff}} > 1$ rearranges to Corollary~\ref{cor:block}. The dominant eigenvalue of $M$ at $\bar{P}=0$ is the theoretical early growth factor per day, compared with simulation in Table~\ref{tab:theory}. $\square$
+
+\subsection*{Proof of Proposition~\ref{prop:band}}
+Individual risk $R_i(t)$ is a convex combination of nonnegative bounded terms, so $0 \le R_i(t) \le \bar{R}_{\max}$ (Lemma~\ref{lem:envelope}). Since $\sigma$ is strictly increasing, $\sigma(-\kappa\mu) \le P_i(t) \le \sigma(\kappa(\bar{R}_{\max}-\mu))$, and the population mean inherits the same bounds. For the width: writing $\Delta = \kappa \bar{R}_{\max}$, the function $g(x) = \sigma(x+\Delta) - \sigma(x)$ satisfies $g'(x) = 0$ exactly at $x = -\Delta/2$, where $g = \sigma(\Delta/2) - \sigma(-\Delta/2) = \tanh(\Delta/4)$; $g$ increases for $x < -\Delta/2$ and decreases after, so the bound is the supremum. The logit of $P_i$ is $\kappa(R_i - \mu)$, whose range $\kappa \bar{R}_{\max}$ does not involve $\mu$; hence midpoint invariance. $\square$
 
 \bibliographystyle{tfp}
 \bibliography{refs}
