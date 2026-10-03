@@ -23,7 +23,7 @@ C_FULL = '#27ae60'
 
 
 def fig_framework():
-    """F1: four-layer hybrid simulation framework, vertical flow, no overlaps."""
+    """F1: four-layer hybrid simulation framework, vertical flow, mathtext."""
     fig, ax = plt.subplots(figsize=(8.2, 6.9))
     ax.axis('off')
 
@@ -40,66 +40,64 @@ def fig_framework():
                     arrowprops=dict(arrowstyle='-|>', linewidth=1.7, color='black'))
 
     # ---- 顶部说明 ----
-    ax.text(0.40, 0.992, 'Both transmission channels modulated by (1 - eps·P\u0304)',
+    ax.text(0.40, 0.992, 'Both transmission channels modulated by $(1-\\varepsilon\\,\\bar{P})$',
             fontsize=10.5, ha='center', va='top', style='italic')
 
-    # ---- 层 1：SD（加高，容纳三行正文）----
+    # ---- 层 1：SD ----
     box(0.16, 0.760, 0.52, 0.180, 'SD layer (information, behaviour)',
-        u'saliency:  S(t) = min(1, (I/N)·α·e^(−λt/100))\n'
-        u'risk:  R\u1d62(t) = (1−η)·R_target + η·R\u1d62(t−1)\n'
-        u'protection:  P\u1d62 = σ( κ(R\u1d62 − μ) ),  P\u0304 = mean P\u1d62',
+        r'saliency:  $S(t)=\mathrm{min}\left(1,\ (I/N)\,\alpha\,e^{-\lambda t/100}\right)$' + '\n'
+        r'risk:  $R_i(t)=(1-\eta)\,R_{\mathrm{target}}+\eta\,R_i(t-1)$' + '\n'
+        r'protection:  $P_i=\sigma\left(\kappa(R_i-\mu)\right),\ \ \bar{P}=\mathrm{mean}_i\,P_i$',
         '#d6eaf8')
 
     # ---- 层 2：ABM ----
     box(0.16, 0.470, 0.52, 0.130, 'ABM layer (individuals)',
-        u'agents with states S / E / I / R\n'
-        u'stochastic transitions;  P\u0304 in both channels',
+        r'agents with states $S/E/I/R$' + '\n'
+        r'stochastic transitions;  $\bar{P}$ enters both channels',
         '#d5f5e3')
 
     # ---- 层 3：蚊媒（左）与 DES（右）----
     box(0.005, 0.045, 0.375, 0.160, 'Mosquito layer',
-        u'humans → E_m → I_m → humans\n'
-        u'incubation 10 d, lifespan 14 d\n'
-        u'risk_m = b·p_mh·(I_m/M)',
+        r'humans $\to E_m \to I_m \to$ humans' + '\n'
+        r'incubation 10 d, lifespan 14 d' + '\n'
+        r'$\mathrm{risk}_m = b\,p_{mh}\,(I_m/M)$',
         '#fadbd8')
     box(0.415, 0.045, 0.375, 0.160, 'DES layer (hospital)',
-        u'beds / ICU / testing queues\n'
-        u'deferred admissions (counted once)\n'
-        u'capacity constraints',
+        r'beds / ICU / testing queues' + '\n'
+        r'deferred admissions (counted once)' + '\n'
+        r'capacity constraints',
         '#fdebd0')
 
-    # ---- 右侧调制说明框（独立区域）----
+    # ---- 右侧调制说明框 ----
     ax.text(0.895, 0.855,
-            u'modulation\n'
-            u'human:\n'
-            u'β(1−ε·P\u0304)·I/N\n'
-            u'mosquito:\n'
-            u'risk_m·(1−ε·P\u0304)',
-            fontsize=8.8, ha='center', va='center', linespacing=1.45,
+            'modulation' + '\n'
+            r'human: $\beta(1-\varepsilon\bar{P})\,I/N$' + '\n'
+            r'mosquito: $\mathrm{risk}_m(1-\varepsilon\bar{P})$',
+            fontsize=8.8, ha='center', va='center', linespacing=1.6,
             bbox=dict(boxstyle='round,pad=0.4', facecolor='#f2f4f4', edgecolor='gray'))
 
-    # ---- SD <-> ABM（箭头 0.32 / 0.48；标签外侧单行×2）----
+    # ---- SD <-> ABM ----
     arrow(0.32, 0.760, 0.600)
-    ax.text(0.305, 0.680, u'saliency S(t)\nrisk targets ↓',
+    ax.text(0.305, 0.680, r'saliency $S(t)$' + '\n' + r'risk targets $\downarrow$',
             fontsize=9, ha='right', va='center', linespacing=1.45)
     arrow(0.48, 0.600, 0.760)
-    ax.text(0.495, 0.680, u'aggregate (S,E,I,R)\nmean protection P\u0304 ↑',
+    ax.text(0.495, 0.680, r'aggregate $(S,E,I,R)$' + '\n' + r'mean protection $\bar{P}$ $\uparrow$',
             fontsize=9, ha='left', va='center', linespacing=1.45)
 
-    # ---- ABM <-> Mosquito（箭头 0.10 / 0.245；标签单行化防撞）----
+    # ---- ABM <-> Mosquito ----
     arrow(0.10, 0.470, 0.205)
-    ax.text(0.085, 0.3375, u'infected I(t) ↓',
+    ax.text(0.085, 0.3375, r'infected $I(t)$ $\downarrow$',
             fontsize=9, ha='right', va='center', linespacing=1.45)
     arrow(0.245, 0.205, 0.470)
-    ax.text(0.262, 0.3375, u'risk_m ↑',
+    ax.text(0.262, 0.3375, r'$\mathrm{risk}_m$ $\uparrow$',
             fontsize=9, ha='left', va='center', linespacing=1.45)
 
-    # ---- ABM <-> DES（箭头 0.505 / 0.66；标签单行化防撞）----
+    # ---- ABM <-> DES ----
     arrow(0.505, 0.470, 0.205)
-    ax.text(0.490, 0.3375, u'admissions ↓',
+    ax.text(0.490, 0.3375, r'admissions $\downarrow$',
             fontsize=9, ha='right', va='center', linespacing=1.45)
     arrow(0.665, 0.205, 0.470)
-    ax.text(0.680, 0.3375, u'beds / ICU ↑',
+    ax.text(0.680, 0.3375, r'beds / ICU $\uparrow$',
             fontsize=9, ha='left', va='center', linespacing=1.45)
 
     ax.set_xlim(0, 1)
