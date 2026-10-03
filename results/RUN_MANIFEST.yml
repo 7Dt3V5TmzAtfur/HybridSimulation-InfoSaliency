@@ -4,8 +4,8 @@
 
 - experiment: exp01
   description: 概念验证：信息-行为反馈开/关对比
-  run_at: 2026-10-03T16:16:57
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:05:22
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 101
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -28,8 +28,8 @@
     - exp01_comparison.png
 - experiment: exp02
   description: 信息-行为反馈定量对比（Welch t + Cohen d）
-  run_at: 2026-10-03T16:17:11
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:05:35
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 202
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -53,8 +53,8 @@
     - exp02_info_effect.png
 - experiment: exp03
   description: 媒体放大系数敏感性与阈值分析
-  run_at: 2026-10-03T16:17:51
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:06:15
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 303
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -82,8 +82,8 @@
     - exp03_threshold_analysis.png
 - experiment: exp04
   description: 真实数据校准（OpenDengue 巴西2019周报，替代系统网格搜索+ABM复核+多季节外推）
-  run_at: 2026-10-03T16:18:16
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:06:39
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 404
   seed_rule: BASE_SEED*1000 + run_index
   data_file: data/National_extract_V1_3.csv
@@ -120,8 +120,8 @@
     - exp04_dengue_calibration.png
 - experiment: exp05
   description: 防护分解：全模型 vs 恒定防护 vs 零防护
-  run_at: 2026-10-03T16:18:25
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:06:48
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 505
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -144,8 +144,8 @@
     - exp05_decomposition.png
 - experiment: exp06
   description: 行为参数敏感性（κ、η）
-  run_at: 2026-10-03T16:19:14
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:07:37
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 606
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -168,8 +168,8 @@
     - exp06_per_run.csv
 - experiment: exp07
   description: 规模外部效度：N=10⁴ 三臂防护分解
-  run_at: 2026-10-03T16:20:26
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:08:49
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 808
   seed_rule: BASE_SEED*1000 + run_index
   population: 10000
@@ -193,8 +193,8 @@
     - exp07_scale_validation.png
 - experiment: exp08
   description: 机制对照：awareness 扩散基线 vs 本文信息显著性机制（匹配平均防护）
-  run_at: 2026-10-03T16:20:33
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:08:55
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 909
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -218,8 +218,8 @@
     - exp08_per_run.csv
 - experiment: exp09
   description: 响应形状扫描：S型中点×斜率对动态边际的影响
-  run_at: 2026-10-03T16:21:04
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:09:27
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 1111
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -243,8 +243,8 @@
     - exp09_per_run.csv
 - experiment: exp10
   description: awareness 基线参数敏感性（(p_A,d_A) 3×3 mini-sweep）
-  run_at: 2026-10-03T16:21:11
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:09:34
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 1212
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -265,10 +265,35 @@
   python: "3.14.7"
   outputs:
     - exp10_awareness_sensitivity.csv
+- experiment: exp11
+  description: 理论验证：双通道入侵阈值与早期增长率
+  run_at: 2026-10-03T17:09:36
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
+  base_seed: 1313
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs: 20
+  fit_window: day 5-35
+  mosquito: on
+  lambda_max: 1.1039922158657633
+  sim_growth: 1.0875
+  rel_deviation_pct: 1.49
+  r0: 3.1595
+  invasion_blocking_protection: 0.804
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp11_growth_validation.csv
 - experiment: ablation
   description: 消融归因审计（5条件×10配对重复）
-  run_at: 2026-10-03T16:21:25
-  code_version: 7e770da3f0244286ae66bb6b975518555ed4842f
+  run_at: 2026-10-03T17:09:50
+  code_version: 3eac8c9679a7ea128a09a3d226452adbd5fbade0
   base_seed: 707
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -293,28 +318,3 @@
     - ablation_attribution.csv
     - ablation_attribution_report.md
     - ablation_attribution.png
-- experiment: exp11
-  description: 理论验证：双通道入侵阈值与早期增长率
-  run_at: 2026-10-03T16:47:18
-  code_version: af66f8e4dd0368c784e52b8066546a2f015993b7
-  base_seed: 1313
-  seed_rule: BASE_SEED*1000 + run_index
-  population: 1000
-  days: 200
-  initial_infected: 10
-  runs: 20
-  fit_window: day 5-35
-  mosquito: on
-  lambda_max: 1.1039922158657633
-  sim_growth: 1.0875
-  rel_deviation_pct: 1.49
-  r0: 3.1595
-  invasion_blocking_protection: 0.804
-  dependencies:
-    numpy: "2.5.3"
-    pandas: "3.0.6"
-    matplotlib: "3.11.2"
-    scipy: "1.18.1"
-  python: "3.14.7"
-  outputs:
-    - exp11_growth_validation.csv
