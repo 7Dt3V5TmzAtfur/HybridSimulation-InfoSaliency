@@ -4,8 +4,8 @@
 
 - experiment: exp01
   description: 概念验证：信息-行为反馈开/关对比
-  run_at: 2026-10-03T11:03:13
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
+  run_at: 2026-10-03T12:02:31
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
   base_seed: 101
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -28,8 +28,8 @@
     - exp01_comparison.png
 - experiment: exp02
   description: 信息-行为反馈定量对比（Welch t + Cohen d）
-  run_at: 2026-10-03T11:03:31
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
+  run_at: 2026-10-03T12:02:49
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
   base_seed: 202
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -53,8 +53,8 @@
     - exp02_info_effect.png
 - experiment: exp03
   description: 媒体放大系数敏感性与阈值分析
-  run_at: 2026-10-03T11:04:43
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
+  run_at: 2026-10-03T12:03:59
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
   base_seed: 303
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -81,147 +81,9 @@
     - exp03_parameter_sensitivity.png
     - exp03_threshold_analysis.png
 - experiment: exp04
-  description: 真实数据校准（OpenDengue 巴西2019周报，替代系统网格搜索+ABM复核）
-  run_at: 2026-10-03T11:05:14
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
-  base_seed: 404
-  seed_rule: BASE_SEED*1000 + run_index
-  data_file: data/National_extract_V1_3.csv
-  country: BRAZIL
-  window: 2019-01-01..2019-12-31
-  case_definition: Total
-  weeks: 52
-  population_surrogate: 211000000
-  mosquito_per_human: 5.0
-  best_beta: 0.25
-  best_sigma: 0.1
-  best_gamma: 0.1
-  best_alpha: 1.0
-  best_i0: 500000.0
-  reporting_rate_rho: 0.011365660616847842
-  rmse: 10077.88499887823
-  r2: 0.9409577893373547
-  R0_human: 2.5
-  abm_population: 10000
-  abm_runs: 5
-  surrogate_abm_correlation: 0.9666371601755479
-  dependencies:
-    numpy: "2.5.3"
-    pandas: "3.0.6"
-    matplotlib: "3.11.2"
-    scipy: "1.18.1"
-  python: "3.14.7"
-  outputs:
-    - exp04_calibration_results.csv
-    - exp04_grid_top.csv
-    - exp04_fit.csv
-    - exp04_surrogate_validation.csv
-    - exp04_dengue_calibration.png
-- experiment: exp05
-  description: 防护分解：全模型 vs 恒定防护 vs 零防护
-  run_at: 2026-10-03T11:05:23
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
-  base_seed: 505
-  seed_rule: BASE_SEED*1000 + run_index
-  population: 1000
-  days: 200
-  initial_infected: 10
-  runs_per_arm: 20
-  p_star: 0.3357
-  marginal_peak_reduction_pct: 3.17
-  marginal_p_value: 0.2816805729584675
-  mosquito: on
-  dependencies:
-    numpy: "2.5.3"
-    pandas: "3.0.6"
-    matplotlib: "3.11.2"
-    scipy: "1.18.1"
-  python: "3.14.7"
-  outputs:
-    - exp05_protection_decomposition.csv
-    - exp05_per_run.csv
-    - exp05_decomposition.png
-- experiment: exp06
-  description: 行为参数敏感性（κ、η）
-  run_at: 2026-10-03T11:06:19
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
-  base_seed: 606
-  seed_rule: BASE_SEED*1000 + run_index
-  population: 1000
-  days: 200
-  initial_infected: 10
-  runs_per_group: 10
-  kappa_grid: [0.5, 1.0, 1.5, 2.0, 3.0]
-  eta_grid: [0.0, 0.15, 0.3, 0.5]
-  reference_peak_zero_protection: 216.8
-  mosquito: on
-  protection_efficiency: 0.85
-  dependencies:
-    numpy: "2.5.3"
-    pandas: "3.0.6"
-    matplotlib: "3.11.2"
-    scipy: "1.18.1"
-  python: "3.14.7"
-  outputs:
-    - exp06_behavior_sensitivity.csv
-    - exp06_per_run.csv
-- experiment: ablation
-  description: 消融归因审计（5条件×10配对重复）
-  run_at: 2026-10-03T11:06:32
-  code_version: 99641e286325f7517a8b6f1c111fbf06a1d404c2
-  base_seed: 707
-  seed_rule: BASE_SEED*1000 + run_index
-  population: 1000
-  days: 200
-  initial_infected: 10
-  runs_per_condition: 10
-  conditions: ['baseline', 'no_info_saliency', 'no_behavior_feedback', 'no_hospital_constraint', 'no_mosquito']
-  hospital_beds: 50
-  icu_beds: 10
-  media_amplification: 1.0
-  attribution_convention: (ablated_mean - baseline_mean)/baseline_mean*100; positive = rises when removed
-  protection_efficiency: 0.85
-  dependencies:
-    numpy: "2.5.3"
-    pandas: "3.0.6"
-    matplotlib: "3.11.2"
-    scipy: "1.18.1"
-  python: "3.14.7"
-  outputs:
-    - ablation_per_run.csv
-    - ablation_summary.csv
-    - ablation_attribution.csv
-    - ablation_attribution_report.md
-    - ablation_attribution.png
-- experiment: exp07
-  description: 规模外部效度：N=10⁴ 三臂防护分解
-  run_at: 2026-10-03T11:41:12
-  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
-  base_seed: 808
-  seed_rule: BASE_SEED*1000 + run_index
-  population: 10000
-  mosquito_population: 50000
-  days: 200
-  initial_infected: 10
-  runs_per_arm: 20
-  p_star: 0.3374
-  marginal_peak_reduction_pct: 4.53
-  marginal_p_value: 1.585158659667425e-08
-  mosquito: on
-  dependencies:
-    numpy: "2.5.3"
-    pandas: "3.0.6"
-    matplotlib: "3.11.2"
-    scipy: "1.18.1"
-  python: "3.14.7"
-  outputs:
-    - exp07_scale_validation.csv
-    - exp07_per_run.csv
-    - exp07_scale_validation.png
-- experiment: exp04
   description: 真实数据校准（OpenDengue 巴西2019周报，替代系统网格搜索+ABM复核+多季节外推）
-  run_at: 2026-10-03T11:43:08
-  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
+  run_at: 2026-10-03T12:04:40
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
   base_seed: 404
   seed_rule: BASE_SEED*1000 + run_index
   data_file: data/National_extract_V1_3.csv
@@ -256,21 +118,19 @@
     - exp04_surrogate_validation.csv
     - exp04_multiseason.csv
     - exp04_dengue_calibration.png
-- experiment: exp08
-  description: 机制对照：awareness 扩散基线 vs 本文信息显著性机制（匹配平均防护）
-  run_at: 2026-10-03T11:46:52
-  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
-  base_seed: 909
+- experiment: exp05
+  description: 防护分解：全模型 vs 恒定防护 vs 零防护
+  run_at: 2026-10-03T12:04:49
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
+  base_seed: 505
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
   days: 200
   initial_infected: 10
-  runs_per_arm: 10
-  awareness_params: p_A=0.25, q=0.8, d_A=0.1
-  m_star: 0.4302
-  a_bar: 0.6347
-  target_protection: 0.336
-  p_star_ours: 0.3356
+  runs_per_arm: 20
+  p_star: 0.3357
+  marginal_peak_reduction_pct: 3.17
+  marginal_p_value: 0.2816805729584675
   mosquito: on
   dependencies:
     numpy: "2.5.3"
@@ -279,12 +139,62 @@
     scipy: "1.18.1"
   python: "3.14.7"
   outputs:
-    - exp08_awareness_comparison.csv
-    - exp08_per_run.csv
+    - exp05_protection_decomposition.csv
+    - exp05_per_run.csv
+    - exp05_decomposition.png
+- experiment: exp06
+  description: 行为参数敏感性（κ、η）
+  run_at: 2026-10-03T12:06:18
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
+  base_seed: 606
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_group: 10
+  kappa_grid: [0.5, 1.0, 1.5, 2.0, 3.0]
+  eta_grid: [0.0, 0.15, 0.3, 0.5]
+  reference_peak_zero_protection: 216.8
+  mosquito: on
+  protection_efficiency: 0.85
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp06_behavior_sensitivity.csv
+    - exp06_per_run.csv
+- experiment: exp07
+  description: 规模外部效度：N=10⁴ 三臂防护分解
+  run_at: 2026-10-03T12:08:28
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
+  base_seed: 808
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 10000
+  mosquito_population: 50000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 20
+  p_star: 0.3374
+  marginal_peak_reduction_pct: 4.53
+  marginal_p_value: 1.585158659667425e-08
+  mosquito: on
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp07_scale_validation.csv
+    - exp07_per_run.csv
+    - exp07_scale_validation.png
 - experiment: exp08
   description: 机制对照：awareness 扩散基线 vs 本文信息显著性机制（匹配平均防护）
-  run_at: 2026-10-03T11:52:05
-  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
+  run_at: 2026-10-03T12:08:35
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
   base_seed: 909
   seed_rule: BASE_SEED*1000 + run_index
   population: 1000
@@ -306,3 +216,31 @@
   outputs:
     - exp08_awareness_comparison.csv
     - exp08_per_run.csv
+- experiment: ablation
+  description: 消融归因审计（5条件×10配对重复）
+  run_at: 2026-10-03T12:08:49
+  code_version: c0ae64eefc8f9bd3f3fe9a94a06c28b6c1bb467c
+  base_seed: 707
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_condition: 10
+  conditions: ['baseline', 'no_info_saliency', 'no_behavior_feedback', 'no_hospital_constraint', 'no_mosquito']
+  hospital_beds: 50
+  icu_beds: 10
+  media_amplification: 1.0
+  attribution_convention: (ablated_mean - baseline_mean)/baseline_mean*100; positive = rises when removed
+  protection_efficiency: 0.85
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - ablation_per_run.csv
+    - ablation_summary.csv
+    - ablation_attribution.csv
+    - ablation_attribution_report.md
+    - ablation_attribution.png
