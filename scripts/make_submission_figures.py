@@ -35,27 +35,27 @@ def fig_framework():
     for x, y, title, body, color in boxes:
         ax.add_patch(plt.Rectangle((x, y), 0.40, 0.20, facecolor=color,
                                    edgecolor='black', linewidth=1.2))
-        ax.text(x + 0.02, y + 0.155, title, fontsize=11, fontweight='bold')
-        ax.text(x + 0.02, y + 0.035, body, fontsize=8.5, va='bottom')
+        ax.text(x + 0.02, y + 0.150, title, fontsize=12.5, fontweight='bold')
+        ax.text(x + 0.02, y + 0.03, body, fontsize=10, va='bottom', linespacing=1.35)
     arrows = [
         ((0.46, 0.87), (0.53, 0.87), 'aggregate\nS/E/I/R, protection', 'right'),
         ((0.53, 0.79), (0.46, 0.79), 'saliency -> risk\nbeta_eff(t)', 'left'),
-        ((0.26, 0.74), (0.26, 0.30), 'infection risk <-> infected mosquitoes', 'mid'),
+        ((0.26, 0.74), (0.26, 0.30), 'infection risk\n<-> infected\nmosquitoes', 'mid'),
         ((0.73, 0.74), (0.73, 0.30), 'admission requests /\nresource availability', 'mid'),
     ]
     for (x1, y1), (x2, y2), label, side in arrows:
         ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
                     arrowprops=dict(arrowstyle='<->', linewidth=1.2))
         if side == 'right':
-            ax.text(0.495, 0.90, label, fontsize=7.5, ha='center')
+            ax.text(0.497, 0.905, label, fontsize=9, ha='center')
         elif side == 'left':
-            ax.text(0.495, 0.715, label, fontsize=7.5, ha='center')
+            ax.text(0.497, 0.705, label, fontsize=9, ha='center')
         elif side == 'mid':
-            ax.text((x1 + x2) / 2 + (0.012 if x1 < 0.4 else -0.012), (y1 + y2) / 2,
-                    label, fontsize=7.5, rotation=90, va='center',
+            ax.text((x1 + x2) / 2 + (0.013 if x1 < 0.4 else -0.013), (y1 + y2) / 2,
+                    label, fontsize=9, rotation=90, va='center',
                     ha='left' if x1 < 0.4 else 'right')
-    ax.text(0.5, 0.985, 'Both transmission channels modulated by (1 - eps * P_avg)',
-            fontsize=9, ha='center', style='italic')
+    ax.text(0.5, 0.985, r'Both transmission channels modulated by (1 - $\epsilon \cdot P_{\mathrm{avg}}$)',
+            fontsize=10, ha='center', style='italic')
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
     fig.savefig(os.path.join(OUT, 'fig1_framework.pdf'), bbox_inches='tight')
     fig.savefig(os.path.join(OUT, 'fig1_framework.png'), dpi=300, bbox_inches='tight')

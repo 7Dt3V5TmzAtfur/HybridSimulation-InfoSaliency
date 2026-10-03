@@ -112,6 +112,8 @@ class AwarenessABM:
             'peak_day': int(np.argmax(self.I_history)),
             'total_infected': int(np.sum(self.states == 'R')),
             'time_avg_protection': float(np.mean(self.protection_history)),
+            'protection_min': float(min(self.protection_history)),
+            'protection_max': float(max(self.protection_history)),
             'time_avg_A': float(self.A) if self.mode == 'constant' else None,
         }
 
@@ -152,6 +154,8 @@ def run_ours_arm(mode: str, protection_override: float = None) -> list:
             'peak_day': int(df['I'].idxmax()),
             'total_infected': int(df['R'].iloc[-1]),
             'time_avg_protection': float(df['avg_protection'].mean()),
+            'protection_min': float(df['avg_protection'].min()),
+            'protection_max': float(df['avg_protection'].max()),
             'time_avg_A': None,
             'protection_level': protection_override if mode_label == 'constant' else np.nan,
         })

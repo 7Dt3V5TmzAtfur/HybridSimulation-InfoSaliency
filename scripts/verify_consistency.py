@@ -139,6 +139,16 @@ def main():
           and abs(e10.dynamic_margin_pp.max() - 48.2) < 0.05
           and in_docs('48.2') and in_docs('18.7') and in_docs('93.3'))
 
+    pr = pd.read_csv(os.path.join(REPO, 'results/exp08_per_run.csv'))
+    aw = pr[(pr.mechanism == 'awareness') & (pr['mode'] == 'dynamic')]
+    ou = pr[(pr.mechanism == 'ours') & (pr['mode'] == 'dynamic')]
+    check('P 振幅：awareness 0.004-0.497 vs 本文 0.321-0.370（两稿）',
+          abs(aw.protection_min.mean() - 0.004) < 0.001
+          and abs(aw.protection_max.mean() - 0.497) < 0.001
+          and abs(ou.protection_min.mean() - 0.321) < 0.001
+          and abs(ou.protection_max.mean() - 0.370) < 0.001
+          and in_docs('0.321') and in_docs('0.370') and in_docs('0.497'))
+
     e1 = pd.read_csv(os.path.join(REPO, 'results/exp01_summary.csv'), index_col=0)
     delay = e1.loc['with_feedback', 'peak_day_mean'] - e1.loc['without_feedback', 'peak_day_mean']
     check('exp01 峰值延迟 18.5（论文无"18.6 天"）',

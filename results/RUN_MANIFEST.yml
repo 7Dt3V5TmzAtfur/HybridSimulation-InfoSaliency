@@ -293,3 +293,28 @@
     - ablation_attribution.csv
     - ablation_attribution_report.md
     - ablation_attribution.png
+- experiment: exp08
+  description: 机制对照：awareness 扩散基线 vs 本文信息显著性机制（匹配平均防护）
+  run_at: 2026-10-03T16:14:09
+  code_version: 450e9d9fa703f4d6d4cf7a169d46738cfa16d760
+  base_seed: 909
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 10
+  awareness_params: p_A=0.25, q=0.8, d_A=0.1
+  m_star: 0.4971
+  a_bar: 0.6848
+  target_protection: 0.336
+  p_star_ours: 0.3356
+  mosquito: on
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp08_awareness_comparison.csv
+    - exp08_per_run.csv
