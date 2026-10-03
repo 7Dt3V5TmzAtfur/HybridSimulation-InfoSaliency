@@ -1,0 +1,25 @@
+# Journal of Simulation venue profile — built from the offline Instructions
+# for Authors (2026-09-14 snapshot, user-provided) + live scope check 2026-10-03.
+# Journal: no page limit; main text <= 10,000 words INCLUDING tables/figures
+# (excl. references/appendices); abstract <= 200 words unstructured; 3-6
+# keywords; double-anonymous review; English only; .bib required for LaTeX.
+id: jos
+name: Journal of Simulation (Taylor & Francis)
+family: journal
+cfp_url: https://www.tandfonline.com/action/authorSubmission?show=instructions&journalCode=tjsm20
+review:
+  blind: double
+  system: Taylor & Francis Submission Portal
+  rebuttal_format: revision with point-by-point response letter
+format:
+  template: interact
+  documentclass: interact
+  columns: 1
+  abstract_words: [0, 200]
+  keywords: none
+  word_limit_main_text: 10000
+  required_sections:
+    - ai-use-acknowledgement
+    - coi-declaration
+    - keywords
+    - reproducibility-statement

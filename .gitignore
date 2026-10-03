@@ -50,3 +50,13 @@ Thumbs.db
 
 # Paper memory (local-only, simulate-reviewers skill)
 .paper-memory/
+
+# LaTeX build artifacts (submission)
+*.aux
+*.log
+*.out
+*.blg
+*.bbl
+*.synctex.gz
+*.fls
+*.fdb_latexmk

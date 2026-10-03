@@ -57,6 +57,7 @@ def fig_framework():
     ax.text(0.5, 0.985, 'Both transmission channels modulated by (1 - eps * P_avg)',
             fontsize=9, ha='center', style='italic')
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    fig.savefig(os.path.join(OUT, 'fig1_framework.pdf'), bbox_inches='tight')
     fig.savefig(os.path.join(OUT, 'fig1_framework.png'), dpi=300, bbox_inches='tight')
     plt.close(fig)
 
@@ -89,6 +90,7 @@ def fig_switch():
     ax.set_xlabel('Day'); ax.set_ylabel('Infectious individuals')
     ax.legend(frameon=False); ax.grid(alpha=0.3)
     fig.tight_layout()
+    fig.savefig(os.path.join(OUT, 'fig2_switch.pdf'), bbox_inches='tight')
     fig.savefig(os.path.join(OUT, 'fig2_switch.png'), dpi=300)
     plt.close(fig)
 
@@ -114,6 +116,7 @@ def fig_decomposition():
         ax.set_title(title); ax.grid(axis='y', alpha=0.3)
         ax.set_ylabel('Peak infectious individuals')
     fig.tight_layout()
+    fig.savefig(os.path.join(OUT, 'fig3_decomposition.pdf'), bbox_inches='tight')
     fig.savefig(os.path.join(OUT, 'fig3_decomposition.png'), dpi=300)
     plt.close(fig)
 
@@ -145,6 +148,7 @@ def fig_calibration():
     ax.legend(frameon=False, fontsize=8); ax.grid(axis='y', alpha=0.3)
     ax.set_title('(b) Seasonal transfer, 2016-2023')
     fig.tight_layout()
+    fig.savefig(os.path.join(OUT, 'fig4_calibration.pdf'), bbox_inches='tight')
     fig.savefig(os.path.join(OUT, 'fig4_calibration.png'), dpi=300)
     plt.close(fig)
 
