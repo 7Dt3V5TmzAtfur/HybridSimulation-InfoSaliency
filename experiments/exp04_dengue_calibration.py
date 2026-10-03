@@ -51,6 +51,75 @@ ABM_NUM_DAYS = 364
 ABM_N_RUNS = 5
 
 
+def run_multiseason_external_validation(best, out_dir: str) -> pd.DataFrame:
+    """多季节时间外推验证（2016–2023，剔除缺测的 2020）。
+
+    严苛档：冻结 2019 全部参数（β, σ, γ, α, I0），仅按季闭式重估报告率 ρ。
+    宽松档：仍冻结动力学参数（β, σ, γ, α），每季在 I0 网格 {1e5, 5e5, 2e6} 内
+            重选（疫情季节间的初始疫情规模不同属外生条件），ρ 仍闭式重估。
+    """
+    seasons = [str(y) for y in range(2016, 2024) if y != 2020]
+    rows = []
+    loader = DengueDataLoader()
+    for season in seasons:
+        start, end = f'{season}-01-01', f'{season}-12-31'
+        data = loader.load_opendengue_national(DATA_FILE, country=COUNTRY,
+                                               start=start, end=end,
+                                               case_definition='Total')
+        if len(data) < 50:
+            print(f'  [跳过] {season}: 仅 {len(data)} 周')
+            continue
+        data_weekly = data['cases'].to_numpy()
+        d_dot_d = float(data_weekly @ data_weekly)
+        ss_tot = float(((data_weekly - data_weekly.mean()) ** 2).sum())
+
+        def score(i0: int):
+            sim = DeterministicSurrogate(
+                POPULATION_BRAZIL_2019,
+                SEIRParams(beta_base=best['beta'], sigma=best['sigma'],
+                           gamma=best['gamma']),
+                media_amplification=best['media_amp'],
+            ).run(len(data_weekly) * 7, i0=i0, e0=i0)
+            model_weekly = weekly_aggregate(sim['incidence'])[:len(data_weekly)]
+            m_dot_m = float(model_weekly @ model_weekly)
+            if m_dot_m <= 0:
+                return None
+            rho = float(model_weekly @ data_weekly) / m_dot_m
+            if not (0.0 < rho <= 1.0):
+                return None
+            fitted = rho * model_weekly
+            rmse = float(np.sqrt(((fitted - data_weekly) ** 2).mean()))
+            r2 = 1 - float(((fitted - data_weekly) ** 2).sum()) / ss_tot if ss_tot > 0 else np.nan
+            return rho, rmse, r2
+
+        strict = score(int(best['i0']))
+        loose_best = None
+        for i0 in (100_000, 500_000, 2_000_000):
+            r = score(i0)
+            if r is not None and (loose_best is None or r[1] < loose_best[1][1]):
+                loose_best = (i0, r)
+        rows.append({
+            'season': season, 'weeks': len(data),
+            'total_reported_cases': float(data_weekly.sum()),
+            'strict_rho': None if strict is None else strict[0],
+            'strict_rmse': None if strict is None else strict[1],
+            'strict_r2': None if strict is None else strict[2],
+            'loose_i0': None if loose_best is None else loose_best[0],
+            'loose_rho': None if loose_best is None else loose_best[1][0],
+            'loose_rmse': None if loose_best is None else loose_best[1][1],
+            'loose_r2': None if loose_best is None else loose_best[1][2],
+            'in_sample': season == '2019',
+        })
+        s_strict = 'n/a' if strict is None else f"{strict[2]:.3f}"
+        s_loose = 'n/a' if loose_best is None else f"{loose_best[1][2]:.3f}"
+        print(f'  {season}: {len(data)} 周, 报告病例 {data_weekly.sum():,.0f} | '
+              f'严苛 R²={s_strict} | 宽松 R²={s_loose}')
+
+    df = pd.DataFrame(rows)
+    df.to_csv(os.path.join(out_dir, 'exp04_multiseason.csv'), index=False)
+    return df
+
+
 def main():
     print('=' * 70)
     print(f'实验4：真实数据校准（OpenDengue {COUNTRY} {START[:4]} 周报，替代系统网格搜索）')
@@ -135,7 +204,11 @@ def main():
     print(f'替代系统 vs ABM：周发病率相关系数 r={corr:.3f}；'
           f'ABM 均值落在替代系统±2σ内（+5%容差）的周占比 {inside*100:.0f}%')
 
-    # [5/5] 可视化
+    # [5/6] 多季节时间外推验证（2016–2023，剔除缺测 2020）
+    print('\n[5/6] 多季节时间外推验证（冻结 2019 动力学参数）...')
+    run_multiseason_external_validation(best, out_dir)
+
+    # [6/6] 可视化
     fig, axes = plt.subplots(2, 1, figsize=(13, 9), sharex=False)
     ax = axes[0]
     ax.bar(range(len(fit_df)), fit_df['data_cases'], color='#95a5a6', alpha=0.6,
@@ -160,7 +233,7 @@ def main():
     fig.savefig(os.path.join(out_dir, 'exp04_dengue_calibration.png'), dpi=150)
     plt.close(fig)
 
-    record_manifest('exp04', '真实数据校准（OpenDengue 巴西2019周报，替代系统网格搜索+ABM复核）',
+    record_manifest('exp04', '真实数据校准（OpenDengue 巴西2019周报，替代系统网格搜索+ABM复核+多季节外推）',
                     {'data_file': 'data/National_extract_V1_3.csv',
                      'country': COUNTRY, 'window': f'{START}..{END}',
                      'case_definition': 'Total', 'weeks': len(data),
@@ -174,7 +247,8 @@ def main():
                      'abm_population': ABM_POPULATION, 'abm_runs': ABM_N_RUNS,
                      'surrogate_abm_correlation': corr},
                     ['exp04_calibration_results.csv', 'exp04_grid_top.csv', 'exp04_fit.csv',
-                     'exp04_surrogate_validation.csv', 'exp04_dengue_calibration.png'])
+                     'exp04_surrogate_validation.csv', 'exp04_multiseason.csv',
+                     'exp04_dengue_calibration.png'])
 
 
 if __name__ == '__main__':

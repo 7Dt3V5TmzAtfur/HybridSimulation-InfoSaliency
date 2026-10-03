@@ -193,3 +193,116 @@
     - ablation_attribution.csv
     - ablation_attribution_report.md
     - ablation_attribution.png
+- experiment: exp07
+  description: 规模外部效度：N=10⁴ 三臂防护分解
+  run_at: 2026-10-03T11:41:12
+  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
+  base_seed: 808
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 10000
+  mosquito_population: 50000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 20
+  p_star: 0.3374
+  marginal_peak_reduction_pct: 4.53
+  marginal_p_value: 1.585158659667425e-08
+  mosquito: on
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp07_scale_validation.csv
+    - exp07_per_run.csv
+    - exp07_scale_validation.png
+- experiment: exp04
+  description: 真实数据校准（OpenDengue 巴西2019周报，替代系统网格搜索+ABM复核+多季节外推）
+  run_at: 2026-10-03T11:43:08
+  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
+  base_seed: 404
+  seed_rule: BASE_SEED*1000 + run_index
+  data_file: data/National_extract_V1_3.csv
+  country: BRAZIL
+  window: 2019-01-01..2019-12-31
+  case_definition: Total
+  weeks: 52
+  population_surrogate: 211000000
+  mosquito_per_human: 5.0
+  best_beta: 0.25
+  best_sigma: 0.1
+  best_gamma: 0.1
+  best_alpha: 1.0
+  best_i0: 500000.0
+  reporting_rate_rho: 0.011365660616847842
+  rmse: 10077.88499887823
+  r2: 0.9409577893373547
+  R0_human: 2.5
+  abm_population: 10000
+  abm_runs: 5
+  surrogate_abm_correlation: 0.9666371601755479
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp04_calibration_results.csv
+    - exp04_grid_top.csv
+    - exp04_fit.csv
+    - exp04_surrogate_validation.csv
+    - exp04_multiseason.csv
+    - exp04_dengue_calibration.png
+- experiment: exp08
+  description: 机制对照：awareness 扩散基线 vs 本文信息显著性机制（匹配平均防护）
+  run_at: 2026-10-03T11:46:52
+  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
+  base_seed: 909
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 10
+  awareness_params: p_A=0.25, q=0.8, d_A=0.1
+  m_star: 0.4302
+  a_bar: 0.6347
+  target_protection: 0.336
+  p_star_ours: 0.3356
+  mosquito: on
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp08_awareness_comparison.csv
+    - exp08_per_run.csv
+- experiment: exp08
+  description: 机制对照：awareness 扩散基线 vs 本文信息显著性机制（匹配平均防护）
+  run_at: 2026-10-03T11:52:05
+  code_version: 4ab262d19483f55d818a70ed9a0a877719fe4766
+  base_seed: 909
+  seed_rule: BASE_SEED*1000 + run_index
+  population: 1000
+  days: 200
+  initial_infected: 10
+  runs_per_arm: 10
+  awareness_params: p_A=0.25, q=0.8, d_A=0.1
+  m_star: 0.4971
+  a_bar: 0.6848
+  target_protection: 0.336
+  p_star_ours: 0.3356
+  mosquito: on
+  dependencies:
+    numpy: "2.5.3"
+    pandas: "3.0.6"
+    matplotlib: "3.11.2"
+    scipy: "1.18.1"
+  python: "3.14.7"
+  outputs:
+    - exp08_awareness_comparison.csv
+    - exp08_per_run.csv
